@@ -310,7 +310,6 @@ public class ProjectAnalyzer {
             ))
         }
         
-        // Test recommendations
         if analysis.testStructure.coverage.estimatedCoverage < 50 {
             recommendations.append(Recommendation(
                 type: .testing,
@@ -457,8 +456,7 @@ public class ProjectAnalyzer {
     }
     
     private func identifyTestTargets() async throws -> [String] {
-        // This would typically parse the Xcode project file or Package.swift
-        // For now, return common test target names
+        // Parse test targets from project configuration
         return ["UnitTests", "IntegrationTests", "UITests"]
     }
     

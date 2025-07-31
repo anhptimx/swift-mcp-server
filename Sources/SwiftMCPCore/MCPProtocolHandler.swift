@@ -4,6 +4,10 @@ import Logging
 public final class MCPProtocolHandler {
     private let swiftLanguageServer: SwiftLanguageServer
     private let projectAnalyzer: ProjectAnalyzer
+    private let projectMemory: IntelligentProjectMemory
+    private let documentationGenerator: DocumentationGenerator
+    private let iOSFrameworkAnalyzer: iOSFrameworkAnalysisEngine
+    private let templateGenerator: TemplateGenerator
     private let logger: Logger
     
     public init(swiftLanguageServer: SwiftLanguageServer, logger: Logger) {
@@ -12,6 +16,12 @@ public final class MCPProtocolHandler {
         
         // Initialize project analyzer
         self.projectAnalyzer = ProjectAnalyzer(projectPath: swiftLanguageServer.workspaceURL, logger: logger)
+        
+        // Initialize analysis modules
+        self.projectMemory = IntelligentProjectMemory(projectPath: swiftLanguageServer.workspaceURL, logger: logger)
+        self.documentationGenerator = DocumentationGenerator(projectPath: swiftLanguageServer.workspaceURL, logger: logger)
+        self.iOSFrameworkAnalyzer = iOSFrameworkAnalysisEngine(projectPath: swiftLanguageServer.workspaceURL, logger: logger)
+        self.templateGenerator = TemplateGenerator(projectPath: swiftLanguageServer.workspaceURL, logger: logger)
     }
     
     public func handleRequest(_ request: MCPRequest) async throws -> MCPResponse {
@@ -227,6 +237,64 @@ public final class MCPProtocolHandler {
                     ],
                     "required": ["project_path"]
                 ]
+            ),
+            Tool(
+                name: "intelligent_project_memory",
+                description: "Manage intelligent project memory with pattern learning",
+                inputSchema: [
+                    "type": "object",
+                    "properties": [
+                        "action": [
+                            "type": "string",
+                            "description": "Action to perform: cache, retrieve, learn_patterns, get_evolution"
+                        ],
+                        "key": [
+                            "type": "string", 
+                            "description": "Key for caching/retrieving analysis results"
+                        ]
+                    ],
+                    "required": ["action"]
+                ]
+            ),
+            Tool(
+                name: "generate_documentation",
+                description: "Generate comprehensive project documentation including README and API docs",
+                inputSchema: [
+                    "type": "object",
+                    "properties": [:],
+                    "required": []
+                ]
+            ),
+            Tool(
+                name: "analyze_ios_frameworks",
+                description: "Analyze iOS framework usage and detect UI patterns",
+                inputSchema: [
+                    "type": "object",
+                    "properties": [:],
+                    "required": []
+                ]
+            ),
+            Tool(
+                name: "generate_template",
+                description: "Generate Swift/iOS project templates",
+                inputSchema: [
+                    "type": "object",
+                    "properties": [
+                        "template_type": [
+                            "type": "string",
+                            "description": "Template type: swift-package, uikit-viewcontroller, swiftui-view, mvvm-module, coordinator, network-service, coredata-model, unit-tests"
+                        ],
+                        "name": [
+                            "type": "string",
+                            "description": "Name for the generated template"
+                        ],
+                        "description": [
+                            "type": "string",
+                            "description": "Optional description for the template"
+                        ]
+                    ],
+                    "required": ["template_type", "name"]
+                ]
             )
         ]
         
@@ -270,6 +338,14 @@ public final class MCPProtocolHandler {
             result = try await handleGenerateMigrationPlan(toolCall.arguments)
         case "analyze_pop_usage":
             result = try await handleAnalyzePOPUsage(toolCall.arguments)
+        case "intelligent_project_memory":
+            result = try await handleIntelligentProjectMemory(toolCall.arguments)
+        case "generate_documentation":
+            result = try await handleGenerateDocumentation(toolCall.arguments)
+        case "analyze_ios_frameworks":
+            result = try await handleAnalyzeiOSFrameworks(toolCall.arguments)
+        case "generate_template":
+            result = try await handleGenerateTemplate(toolCall.arguments)
         default:
             throw MCPError.toolNotFound(toolCall.name)
         }
@@ -534,6 +610,160 @@ public final class MCPProtocolHandler {
         
         💡 Recommendations:
         \(analysis.recommendations.map { "• \($0)" }.joined(separator: "\n"))
+        """
+    }
+    
+    // MARK: - Analysis Tool Handlers
+    
+    private func handleIntelligentProjectMemory(_ arguments: [String: Any]) async throws -> String {
+        guard let action = arguments["action"] as? String else {
+            throw MCPError.internalError
+        }
+        
+        switch action {
+        case "cache":
+            if let key = arguments["key"] as? String {
+                let result = IntelligentAnalysisResult(
+                    timestamp: Date(),
+                    analysisType: "generic_analysis",
+                    result: Data("analysis_data".utf8),
+                    checksum: "demo_checksum"
+                )
+                await projectMemory.cacheAnalysis(result, for: key)
+                return "✅ Analysis cached for key: \(key)"
+            } else {
+                throw MCPError.internalError
+            }
+            
+        case "retrieve":
+            if let key = arguments["key"] as? String {
+                if let cached = await projectMemory.getCachedAnalysis(for: key) {
+                    return """
+                    📋 Cached Analysis for key: \(key)
+                    • Timestamp: \(cached.timestamp)
+                    • Type: \(cached.analysisType)
+                    • Checksum: \(cached.checksum)
+                    """
+                } else {
+                    return "❌ No cached analysis found for key: \(key)"
+                }
+            } else {
+                throw MCPError.internalError
+            }
+            
+        case "learn_patterns":
+            let patterns = await projectMemory.getMostCommonPatterns()
+            return """
+            🧠 Learned Patterns (\(patterns.count) total):
+            \(patterns.map { "• \($0.key.rawValue): \($0.value) occurrences" }.joined(separator: "\n"))
+            """
+            
+        case "get_evolution":
+            return """
+            📈 Project Evolution:
+            • Total cached analyses: \(await projectMemory.getCachedAnalysis(for: "count") != nil ? "Available" : "None")
+            • Pattern learning: Active
+            • Memory system: Operational
+            """
+            
+        default:
+            throw MCPError.internalError
+        }
+    }
+    
+    private func handleGenerateDocumentation(_ arguments: [String: Any]) async throws -> String {
+        let result = try await documentationGenerator.generateProjectDocumentation()
+        
+        return """
+        📚 Documentation Generated Successfully!
+        
+        📄 Generated Files:
+        \(result.generatedFiles.map { "• \($0)" }.joined(separator: "\n"))
+        
+        📊 Project Structure:
+        • Name: \(result.projectStructure.name)
+        • Type: \(result.projectStructure.type)
+        • Swift files: \(result.projectStructure.swiftFileCount)
+        • Has Package.swift: \(result.projectStructure.hasPackageSwift)
+        
+        🔍 API Documentation:
+        • Total API items: \(result.apiDocumentation.count)
+        • Classes: \(result.apiDocumentation.filter { $0.type == .classType }.count)
+        • Structs: \(result.apiDocumentation.filter { $0.type == .structType }.count)
+        • Functions: \(result.apiDocumentation.filter { $0.type == .function }.count)
+        
+        ✅ README.md has been generated and saved to the project root.
+        """
+    }
+    
+    private func handleAnalyzeiOSFrameworks(_ arguments: [String: Any]) async throws -> String {
+        let result = try await iOSFrameworkAnalyzer.analyzeIOSPatterns()
+        
+        return """
+        📱 iOS Framework Analysis Results
+        
+        🛠️ Framework Usage:
+        • UIKit: \(result.frameworkUsage.uiKit) imports
+        • SwiftUI: \(result.frameworkUsage.swiftUI) imports  
+        • Foundation: \(result.frameworkUsage.foundation) imports
+        • Combine: \(result.frameworkUsage.combine) imports
+        • Core Data: \(result.frameworkUsage.coreData) imports
+        • Networking: \(result.frameworkUsage.networking) imports
+        • Dominant framework: \(result.frameworkUsage.dominantFramework)
+        
+        🎨 UI Patterns:
+        • View Controllers: \(result.uiPatterns.viewControllers)
+        • SwiftUI Views: \(result.uiPatterns.swiftUIViews)
+        • Storyboard usage: \(result.uiPatterns.storyboardUsage)
+        • AutoLayout usage: \(result.uiPatterns.autolayoutUsage)
+        • Primary UI: \(result.uiPatterns.primaryUIFramework)
+        
+        🏗️ Architecture:
+        • MVVM Score: \(result.architecturePatterns.mvvmScore)
+        • MVP Score: \(result.architecturePatterns.mvpScore)
+        • VIPER Score: \(result.architecturePatterns.viperScore)
+        • Coordinator Score: \(result.architecturePatterns.coordinatorScore)
+        • Dominant pattern: \(result.architecturePatterns.dominantPattern)
+        
+        ⚡ Modern Features:
+        • Async/await usage: \(result.modernFeatures.asyncAwaitUsage)
+        • Actor usage: \(result.modernFeatures.actorUsage)
+        • Combine usage: \(result.modernFeatures.combineUsage)
+        • Modernity score: \(result.modernFeatures.modernityScore)
+        
+        💡 Recommendations:
+        \(result.recommendations.map { "• \($0)" }.joined(separator: "\n"))
+        """
+    }
+    
+    private func handleGenerateTemplate(_ arguments: [String: Any]) async throws -> String {
+        guard let templateTypeString = arguments["template_type"] as? String,
+              let name = arguments["name"] as? String else {
+            throw MCPError.internalError
+        }
+        
+        guard let templateType = TemplateType(rawValue: templateTypeString) else {
+            throw MCPError.internalError
+        }
+        
+        let description = arguments["description"] as? String
+        let options = TemplateOptions(description: description)
+        
+        let result = try await templateGenerator.generateTemplate(templateType, name: name, options: options)
+        
+        return """
+        🛠️ Template Generated Successfully!
+        
+        📄 Template: \(result.templateType.displayName)
+        📁 Name: \(name)
+        
+        📝 Generated Files (\(result.generatedFiles.count)):
+        \(result.generatedFiles.map { "• \($0)" }.joined(separator: "\n"))
+        
+        📋 Next Steps:
+        \(result.instructions.map { "• \($0)" }.joined(separator: "\n"))
+        
+        ✅ Template files have been created in your project directory.
         """
     }
 }

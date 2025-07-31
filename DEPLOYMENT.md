@@ -37,6 +37,7 @@ Minimum:
 - 2GB RAM, 1GB storage
 - Network access for SourceKit-LSP
 
+
 Recommended:
 - Swift 5.10+
 - macOS 14.0+ or Linux Ubuntu 22.04+
