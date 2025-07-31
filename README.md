@@ -15,6 +15,12 @@ This server extends the standard MCP protocol with specialized tools for Swift p
 - **Project Health Metrics**: Comprehensive codebase quality assessment
 - **Real-time Diagnostics**: Live compilation feedback and error reporting
 
+### Enhanced Development Tools
+- **Intelligent Project Memory**: Pattern learning system with evolutionary tracking
+- **Documentation Generator**: Automatic Swift API documentation with README generation
+- **iOS Framework Analyzer**: Comprehensive analysis of iOS development patterns and Apple framework usage
+- **Template Generator**: Professional Swift/iOS project templates for rapid development
+
 ### Professional Integration
 - **SourceKit-LSP Integration**: Leverages Apple's official language server protocol
 - **Swift Package Manager Support**: Native SPM compatibility and workspace analysis
@@ -242,7 +248,7 @@ curl -X POST http://localhost:8080/mcp \
 
 ## MCP Tools Reference
 
-The server implements six specialized MCP tools for comprehensive Swift project analysis:
+The server implements comprehensive MCP tools for Swift project analysis and development:
 
 ### Core Analysis Tools
 
@@ -252,21 +258,7 @@ The server implements six specialized MCP tools for comprehensive Swift project 
 **Parameters**:
 - `workspace_path` (string): Path to Swift project root
 
-**Returns**:
-```json
-{
-  "score": 85,
-  "level": "Excellent", 
-  "total_files": 42,
-  "protocols": 18,
-  "structs": 35,
-  "classes": 12,
-  "recommendations": [
-    "Excellent protocol adoption detected",
-    "Consider extracting shared protocols for common behaviors"
-  ]
-}
-```
+**Returns**: Detailed POP score (0-100), file statistics, and optimization recommendations.
 
 #### `detect_architecture` 
 **Purpose**: Identifies architectural patterns used in the codebase.
@@ -274,23 +266,51 @@ The server implements six specialized MCP tools for comprehensive Swift project 
 **Parameters**:
 - `workspace_path` (string): Path to Swift project root
 
-**Returns**:
-```json
-{
-  "pattern": "Clean Architecture",
-  "confidence": 0.92,
-  "characteristics": [
-    "Layer separation detected",
-    "Dependency inversion implemented", 
-    "Clear domain boundaries"
-  ]
-}
-```
-
-### Advanced Analysis Tools
+**Returns**: Detected pattern (MVC, MVVM, VIPER, Clean Architecture) with confidence score.
 
 #### `search_symbols`
 **Purpose**: Advanced symbol search with filtering and categorization capabilities.
+
+**Parameters**:
+- `query` (string): Search term for symbols
+- `symbol_type` (string, optional): Filter by type (class, struct, protocol, etc.)
+
+**Returns**: Categorized list of matching symbols with metadata.
+
+### Enhanced Development Tools
+
+#### `intelligent_project_memory`
+**Purpose**: Manage intelligent project memory with pattern learning and caching.
+
+**Parameters**:
+- `action` (string): Action to perform (`cache`, `retrieve`, `learn_patterns`, `get_evolution`)
+- `key` (string, optional): Cache key for store/retrieve operations
+
+**Returns**: Analysis results, cached data, or learned pattern insights.
+
+#### `generate_documentation`
+**Purpose**: Generate comprehensive Swift API documentation automatically.
+
+**Parameters**: None (analyzes current workspace)
+
+**Returns**: Generated documentation files, project structure analysis, and API inventory.
+
+#### `analyze_ios_frameworks`
+**Purpose**: Analyze iOS development patterns and Apple framework usage.
+
+**Parameters**: None (analyzes current workspace)
+
+**Returns**: Framework usage statistics, UI patterns, architecture scores, and modernization recommendations.
+
+#### `generate_template`
+**Purpose**: Generate professional Swift/iOS project templates.
+
+**Parameters**:
+- `template_type` (string): Template type (`swift-package`, `uikit-viewcontroller`, `swiftui-view`, `mvvm-module`, etc.)
+- `name` (string): Project/component name
+- `description` (string, optional): Project description
+
+**Returns**: Generated files list and setup instructions.
 
 **Parameters**:
 - `workspace_path` (string): Project path
