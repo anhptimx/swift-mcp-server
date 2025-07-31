@@ -1,0 +1,33 @@
+# Build artifacts
+.build/
+*.xcodeproj
+*.xcworkspace
+
+# Swift Package Manager
+Package.resolved
+
+# Xcode
+DerivedData/
+*.xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Dependencies
+Packages/
+
+# Coverage
+*.profdata
+*.profraw

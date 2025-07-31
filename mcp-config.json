@@ -1,0 +1,42 @@
+{
+  "name": "swift-mcp-server",
+  "version": "1.0.0",
+  "description": "Swift MCP Server for Serena MCP integration with SourceKit-LSP support",
+  "mcpServer": {
+    "transport": {
+      "type": "http",
+      "host": "127.0.0.1",
+      "port": 8080
+    },
+    "capabilities": {
+      "tools": ["find_symbols", "find_references", "get_definition", "get_hover_info", "format_document"],
+      "resources": ["swift://workspace"],
+      "experimental": {
+        "swiftLanguageSupport": true,
+        "sourceKitLSP": true
+      }
+    }
+  },
+  "serenaIntegration": {
+    "languageSupport": "swift",
+    "tools": {
+      "find_symbol": {
+        "namePatterns": ["class", "function", "method", "variable", "protocol", "enum"],
+        "searchTypes": ["substring", "exact", "regex"]
+      },
+      "find_referencing_symbols": {
+        "supportedTypes": ["classes", "methods", "functions", "variables"]
+      },
+      "symbol_operations": {
+        "insert_after_symbol": true,
+        "insert_before_symbol": true,
+        "replace_symbol_body": true
+      }
+    }
+  },
+  "requirements": {
+    "swift": ">=5.9",
+    "macos": ">=13.0",
+    "sourcekit-lsp": ">=1.0.0"
+  }
+}
