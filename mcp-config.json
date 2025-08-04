@@ -4,14 +4,15 @@
   "description": "Swift MCP Server for Serena MCP integration with SourceKit-LSP support",
   "mcpServer": {
     "transport": {
-      "type": "http",
+      "type": "stdio",
       "host": "127.0.0.1",
       "port": 8080,
       "portRange": {
         "min": 8080,
         "max": 8090
       },
-      "autoPortSelection": true
+      "autoPortSelection": true,
+      "httpFallback": true
     },
     "capabilities": {
       "tools": ["find_symbols", "find_references", "get_definition", "get_hover_info", "format_document"],

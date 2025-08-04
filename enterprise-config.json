@@ -1,0 +1,61 @@
+{
+  "name": "swift-mcp-server",
+  "version": "1.0.0",
+  "description": "Enterprise Swift MCP Server with dual transport support",
+  "mcpServer": {
+    "transport": {
+      "type": "http",
+      "host": "0.0.0.0",
+      "port": 8080,
+      "portRange": {
+        "min": 9000,
+        "max": 9010
+      },
+      "autoPortSelection": true
+    },
+    "capabilities": {
+      "tools": [
+        "find_symbols",
+        "find_references", 
+        "get_definition",
+        "get_hover_info",
+        "format_document",
+        "analyze_project",
+        "generate_documentation"
+      ],
+      "resources": [
+        "swift://workspace",
+        "swift://project",
+        "swift://symbols"
+      ]
+    }
+  },
+  "performance": {
+    "maxConcurrentTasks": 10,
+    "taskTimeoutSeconds": 30.0,
+    "memoryLimitMB": 512,
+    "enableMetrics": true
+  },
+  "serenaIntegration": {
+    "languageSupport": "swift",
+    "tools": {
+      "findSymbol": {
+        "namePatterns": ["class", "function", "method", "variable", "protocol", "enum"],
+        "searchTypes": ["substring", "exact", "regex"]
+      },
+      "findReferencingSymbols": {
+        "supportedTypes": ["classes", "methods", "functions", "variables"]
+      },
+      "symbolOperations": {
+        "insertAfterSymbol": true,
+        "insertBeforeSymbol": true,
+        "replaceSymbolBody": true
+      }
+    }
+  },
+  "requirements": {
+    "swift": ">=5.9",
+    "macos": ">=13.0",
+    "sourceKitLSP": ">=1.0.0"
+  }
+}

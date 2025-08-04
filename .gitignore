@@ -45,3 +45,19 @@ coverage/
 # Server runtime
 server_output.log
 .swift-mcp-memory/
+*.pid
+
+# Enterprise deployment
+*.env
+.env.*
+secrets/
+
+# Build artifacts
+*.dSYM/
+*.o
+*.so
+*.dylib
+
+# Runtime logs
+*.json.log
+swift-mcp-server.log
