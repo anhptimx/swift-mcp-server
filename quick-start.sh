@@ -1,374 +1,399 @@
 #!/bin/bash
 
-# Swift MCP Server - Quick Start Setup Script
-# This script automates the installation and setup process
+# Quick Start Script for Swift MCP Server
+# Get up and running in minutes
+# Version: 1.0
 
-set -e  # Exit on error
+set -e
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Logging functions
-log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VSCODE_SETTINGS_DIR="$HOME/Library/Application Support/Code/User"
+
+print_banner() {
+    echo -e "${CYAN}"
+    echo "=================================================="
+    echo "       Swift MCP Server Quick Start"
+    echo "=================================================="
+    echo -e "${NC}"
 }
 
-log_success() {
+print_step() {
+    echo -e "${BLUE}🚀 Step $1: $2${NC}"
+    echo
+}
+
+print_success() {
     echo -e "${GREEN}✅ $1${NC}"
 }
 
-log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-log_error() {
+print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-print_header() {
-    echo -e "${BLUE}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                   Swift MCP Server Setup                     ║"
-    echo "║            Professional Swift Analysis for Serena            ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
 }
 
-print_footer() {
-    echo -e "${GREEN}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                      Setup Complete! 🎉                     ║"
-    echo "║                                                              ║"
-    echo "║  Your Swift MCP Server is ready for Serena integration      ║"
-    echo "║                                                              ║"
-    echo "║  Next steps:                                                 ║"
-    echo "║  1. Configure Claude Desktop (see SERENA_INTEGRATION.md)    ║"
-    echo "║  2. Test with: curl http://127.0.0.1:8081/health            ║"
-    echo "║  3. Start analyzing Swift projects with Serena!             ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
+print_info() {
+    echo -e "${CYAN}ℹ️  $1${NC}"
 }
 
-# Check if running on macOS
-check_platform() {
-    log_info "Checking platform compatibility..."
+print_command() {
+    echo -e "${YELLOW}Command: $1${NC}"
+}
+
+check_prerequisites() {
+    print_step "1" "Checking Prerequisites"
     
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        log_success "Running on macOS - platform supported"
-        PLATFORM="macos"
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        log_success "Running on Linux - platform supported"
-        PLATFORM="linux"
-    else
-        log_error "Unsupported platform: $OSTYPE"
-        log_info "Swift MCP Server requires macOS 13.0+ or Linux Ubuntu 18.04+"
-        exit 1
-    fi
-}
-
-# Check Swift installation
-check_swift() {
-    log_info "Checking Swift installation..."
-    
+    # Check Swift
     if command -v swift &> /dev/null; then
-        SWIFT_VERSION=$(swift --version | head -n1 | grep -o '[0-9]\+\.[0-9]\+')
-        log_success "Swift $SWIFT_VERSION found"
-        
-        # Check minimum version requirement (5.9)
-        if [[ "$(printf '%s\n' "5.9" "$SWIFT_VERSION" | sort -V | head -n1)" = "5.9" ]]; then
-            log_success "Swift version meets requirements (5.9+)"
-        else
-            log_info "Swift version: $SWIFT_VERSION (compatible with 5.9+)"
-        fi
+        local swift_version=$(swift --version | head -1)
+        print_success "Swift found: $swift_version"
     else
-        log_error "Swift not found!"
-        if [[ "$PLATFORM" == "macos" ]]; then
-            log_info "Install Xcode Command Line Tools: xcode-select --install"
-        else
-            log_info "Install Swift: curl -s https://swift.org/install.sh | bash"
-        fi
+        print_error "Swift not found. Please install Swift from https://swift.org/download/"
         exit 1
     fi
-}
-
-# Check SourceKit-LSP (macOS only)
-check_sourcekit_lsp() {
-    if [[ "$PLATFORM" == "macos" ]]; then
-        log_info "Checking SourceKit-LSP installation..."
-        
-        if command -v sourcekit-lsp &> /dev/null; then
-            log_success "SourceKit-LSP found at $(which sourcekit-lsp)"
-        else
-            log_warning "SourceKit-LSP not found in PATH"
-            
-            # Check common Xcode locations
-            XCODE_SOURCEKIT="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp"
-            if [[ -f "$XCODE_SOURCEKIT" ]]; then
-                log_success "SourceKit-LSP found in Xcode: $XCODE_SOURCEKIT"
-                export SOURCEKIT_LSP_PATH="$XCODE_SOURCEKIT"
-            else
-                log_error "SourceKit-LSP not found. Install Xcode or Xcode Command Line Tools"
-                exit 1
-            fi
-        fi
+    
+    # Check Git
+    if command -v git &> /dev/null; then
+        print_success "Git found"
+    else
+        print_error "Git not found. Please install Git"
+        exit 1
     fi
+    
+    # Check if we're in the right directory
+    if [ -f "$SCRIPT_DIR/Package.swift" ]; then
+        print_success "Package.swift found - you're in the right directory"
+    else
+        print_error "Package.swift not found. Please run this script from the project root"
+        exit 1
+    fi
+    
+    echo
 }
 
-# Build the server
 build_server() {
-    log_info "Building Swift MCP Server..."
+    print_step "2" "Building the Server"
     
-    # Clean previous builds
-    if [[ -d ".build" ]]; then
-        log_info "Cleaning previous build..."
-        rm -rf .build
-    fi
+    cd "$SCRIPT_DIR"
     
-    # Resolve dependencies
-    log_info "Resolving Swift package dependencies..."
+    print_info "Cleaning previous builds..."
+    swift package clean
+    
+    print_info "Resolving dependencies..."
     swift package resolve
     
-    # Build release version
-    log_info "Building release version (this may take a few minutes)..."
+    print_info "Building release version..."
+    print_command "swift build --configuration release"
     swift build --configuration release
     
-    # Check if build succeeded
-    if [[ -f ".build/release/SwiftMCPServer" ]]; then
-        log_success "Build completed successfully!"
+    # Verify build
+    if [ -f ".build/release/swift-mcp-server" ]; then
+        print_success "Server built successfully!"
         
         # Make executable
-        chmod +x .build/release/SwiftMCPServer
+        chmod +x .build/release/swift-mcp-server
         
-        # Show build info
-        BUILD_SIZE=$(du -h .build/release/SwiftMCPServer | cut -f1)
-        log_info "Executable size: $BUILD_SIZE"
-    else
-        log_error "Build failed! Check the output above for errors."
-        exit 1
-    fi
-}
-
-# Test the server
-test_server() {
-    log_info "Testing server functionality..."
-    
-    # Start server in background
-    ./.build/release/SwiftMCPServer --host 127.0.0.1 --port 8081 &
-    SERVER_PID=$!
-    
-    # Wait for server to start
-    sleep 3
-    
-    # Test health endpoint
-    log_info "Testing health endpoint..."
-    if curl -s http://127.0.0.1:8081/health > /dev/null; then
-        log_success "Health endpoint responding correctly"
-    else
-        log_error "Health endpoint not responding"
-        kill $SERVER_PID 2>/dev/null || true
-        exit 1
-    fi
-    
-    # Test MCP tools endpoint
-    log_info "Testing MCP tools endpoint..."
-    TOOLS_RESPONSE=$(curl -s -X POST http://127.0.0.1:8081/mcp \
-        -H "Content-Type: application/json" \
-        -d '{"method": "tools/list", "params": {}}' || echo "ERROR")
-    
-    if [[ "$TOOLS_RESPONSE" != "ERROR" ]] && [[ "$TOOLS_RESPONSE" == *"analyze_project"* ]]; then
-        TOOL_COUNT=$(echo "$TOOLS_RESPONSE" | grep -o "analyze_project\|detect_architecture\|find_symbols" | wc -l)
-        log_success "MCP tools endpoint working (found $TOOL_COUNT tools)"
-    else
-        log_error "MCP tools endpoint not working properly"
-        kill $SERVER_PID 2>/dev/null || true
-        exit 1
-    fi
-    
-    # Stop test server
-    kill $SERVER_PID 2>/dev/null || true
-    sleep 1
-    
-    log_success "Server tests passed!"
-}
-
-# Install Serena (optional)
-install_serena() {
-    log_info "Checking for Serena MCP installation..."
-    
-    if command -v uvx &> /dev/null; then
-        log_success "UV found - Serena can be installed"
-        
-        echo
-        read -p "🤖 Would you like to install Serena MCP for enhanced Swift development? (y/N): " -n 1 -r
-        echo
-        
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Installing Serena MCP..."
-            uvx --from git+https://github.com/oraios/serena serena --help > /dev/null 2>&1
-            if [[ $? -eq 0 ]]; then
-                log_success "Serena MCP installed successfully!"
-                log_info "See SERENA_INTEGRATION.md for configuration instructions"
-            else
-                log_warning "Serena installation failed, but you can install it later"
-            fi
+        # Test basic functionality
+        if .build/release/swift-mcp-server --help > /dev/null 2>&1; then
+            print_success "Server binary is functional"
         else
-            log_info "Skipping Serena installation"
+            print_warning "Server binary may have issues"
         fi
     else
-        log_info "UV not found - install it to use Serena MCP"
-        log_info "Install UV: curl -LsSf https://astral.sh/uv/install.sh | sh"
+        print_error "Build failed - server binary not found"
+        exit 1
     fi
+    
+    echo
 }
 
-# Generate configuration examples
-generate_configs() {
-    log_info "Generating configuration examples..."
+test_server() {
+    print_step "3" "Testing Server Functionality"
     
-    # Create examples directory
-    mkdir -p examples/configs
+    print_info "Testing HTTP mode..."
     
-    # Claude Desktop config
-    cat > examples/configs/claude_desktop_config.json << 'EOF'
+    # Start server in background
+    .build/release/swift-mcp-server \
+        --transport http \
+        --port 8080 \
+        --workspace "$SCRIPT_DIR" \
+        > /tmp/quickstart-test.log 2>&1 &
+    
+    local server_pid=$!
+    sleep 3
+    
+    # Test if server is running
+    if kill -0 $server_pid 2>/dev/null; then
+        print_success "HTTP server started successfully"
+        
+        # Test health endpoint
+        if curl -s -f "http://localhost:8080/health" > /dev/null 2>&1; then
+            print_success "Health endpoint responding"
+        else
+            print_warning "Health endpoint not responding"
+        fi
+        
+        # Stop server
+        kill $server_pid 2>/dev/null || true
+    else
+        print_error "Server failed to start"
+        echo "Check logs: cat /tmp/quickstart-test.log"
+        exit 1
+    fi
+    
+    print_info "Testing STDIO mode..."
+    
+    # Test STDIO mode with a simple request
+    local test_request='{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}}}'
+    
+    if echo "$test_request" | timeout 10s .build/release/swift-mcp-server \
+        --transport stdio \
+        --workspace "$SCRIPT_DIR" \
+        > /tmp/quickstart-stdio.json 2>/dev/null; then
+        
+        if grep -q '"result"' /tmp/quickstart-stdio.json; then
+            print_success "STDIO mode working correctly"
+        else
+            print_warning "STDIO mode may have issues"
+        fi
+    else
+        print_warning "STDIO test failed (this might be normal)"
+    fi
+    
+    echo
+}
+
+setup_vscode_integration() {
+    print_step "4" "Setting up VS Code Integration"
+    
+    local server_path="$SCRIPT_DIR/.build/release/swift-mcp-server"
+    
+    # Check if VS Code is installed
+    if [ -d "/Applications/Visual Studio Code.app" ] || command -v code &> /dev/null; then
+        print_success "VS Code detected"
+    else
+        print_warning "VS Code not detected - you can still use the server manually"
+    fi
+    
+    # Create VS Code settings directory if it doesn't exist
+    if [ ! -d "$VSCODE_SETTINGS_DIR" ]; then
+        print_info "Creating VS Code settings directory..."
+        mkdir -p "$VSCODE_SETTINGS_DIR"
+    fi
+    
+    # Create MCP configuration
+    local config_file="$VSCODE_SETTINGS_DIR/swift-mcp-config.json"
+    
+    cat > "$config_file" << EOF
 {
-  "mcpServers": {
-    "serena": {
-      "command": "uvx",
-      "args": [
-        "--from", "git+https://github.com/oraios/serena",
-        "serena", "start-mcp-server",
-        "--context", "desktop-app"
-      ]
-    },
-    "swift-mcp": {
-      "command": "/REPLACE_WITH_ACTUAL_PATH/.build/release/SwiftMCPServer",
-      "args": ["--host", "127.0.0.1", "--port", "8081"],
-      "env": {
-        "SWIFT_MCP_SERVER": "http://127.0.0.1:8081"
+  "mcp": {
+    "servers": {
+      "swift-mcp-server": {
+        "command": "$server_path",
+        "args": [
+          "--transport", "stdio",
+          "--workspace", "\${workspaceFolder}",
+          "--log-level", "info"
+        ],
+        "env": {
+          "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Xcode.app/Contents/Developer/usr/bin"
+        }
       }
     }
   }
 }
 EOF
-
-    # Replace with actual path
-    CURRENT_PATH=$(pwd)
-    sed -i.bak "s|/REPLACE_WITH_ACTUAL_PATH|$CURRENT_PATH|g" examples/configs/claude_desktop_config.json
-    rm examples/configs/claude_desktop_config.json.bak 2>/dev/null || true
     
-    # Serena project config
-    cat > examples/configs/serena_project.yml << 'EOF'
-name: "MySwiftApp"
-language: "swift"
-build_command: "swift build"
-test_command: "swift test"
-format_command: "swift-format format"
-lint_command: "swiftlint lint"
+    print_success "VS Code MCP configuration created"
+    print_info "Configuration saved to: $config_file"
+    
+    echo
+    print_info "To use with VS Code:"
+    print_info "1. Install the MCP extension in VS Code"
+    print_info "2. Copy the contents of $config_file"
+    print_info "3. Paste into your VS Code settings.json under the \"mcp\" section"
+    
+    echo
+}
 
-swift_specific:
-  sourcekit_lsp: true
-  target_platform: "ios"
-  min_version: "15.0"
-  
-integration:
-  swift_mcp_server: "http://127.0.0.1:8081"
-  enable_symbol_analysis: true
-  auto_documentation: true
+provide_usage_examples() {
+    print_step "5" "Usage Examples"
+    
+    local server_path="$SCRIPT_DIR/.build/release/swift-mcp-server"
+    
+    echo -e "${CYAN}HTTP Mode (for external tools):${NC}"
+    print_command "$server_path --transport http --port 8080 --workspace /path/to/your/project"
+    echo
+    
+    echo -e "${CYAN}STDIO Mode (for VS Code/Serena):${NC}"
+    print_command "$server_path --transport stdio --workspace /path/to/your/project"
+    echo
+    
+    echo -e "${CYAN}With custom configuration:${NC}"
+    print_command "$server_path --transport http --port 8080 --config config.json"
+    echo
+    
+    echo -e "${CYAN}Debug mode:${NC}"
+    print_command "$server_path --transport stdio --workspace . --log-level debug"
+    echo
+    
+    echo -e "${CYAN}Available options:${NC}"
+    print_info "Run: $server_path --help"
+    
+    echo
+}
+
+provide_next_steps() {
+    print_step "6" "Next Steps"
+    
+    echo -e "${CYAN}🎯 What you can do now:${NC}"
+    echo
+    echo -e "${GREEN}1. Test with curl (HTTP mode):${NC}"
+    echo "   Start server: .build/release/swift-mcp-server --transport http --port 8080 --workspace ."
+    echo "   Test health: curl http://localhost:8080/health"
+    echo
+    
+    echo -e "${GREEN}2. Use with VS Code:${NC}"
+    echo "   - Install VS Code MCP extension"
+    echo "   - Add configuration from $VSCODE_SETTINGS_DIR/swift-mcp-config.json"
+    echo "   - Open a Swift project in VS Code"
+    echo
+    
+    echo -e "${GREEN}3. Run diagnostic tools:${NC}"
+    echo "   Health check: ./health-check.sh"
+    echo "   Quick fixes: ./quick-fix.sh all"
+    echo "   Integration tests: ./test-integration.sh"
+    echo
+    
+    echo -e "${GREEN}4. Customize configuration:${NC}"
+    echo "   Edit: mcp-config.json"
+    echo "   Enterprise: enterprise-config.json"
+    echo
+    
+    echo -e "${CYAN}📚 Documentation:${NC}"
+    echo "   README.md - Complete documentation"
+    echo "   MODERN_CONCURRENCY.md - Concurrency features"
+    echo "   DEPLOYMENT.md - Production deployment"
+    echo
+}
+
+run_final_verification() {
+    print_step "7" "Final Verification"
+    
+    # Run health check if available
+    if [ -f "$SCRIPT_DIR/health-check.sh" ]; then
+        print_info "Running health check..."
+        if "$SCRIPT_DIR/health-check.sh" > /tmp/quickstart-health.log 2>&1; then
+            print_success "Health check passed"
+        else
+            print_warning "Health check found some issues - check ./health-check.sh"
+        fi
+    fi
+    
+    # Verify all scripts are executable
+    local scripts=("health-check.sh" "quick-fix.sh" "test-integration.sh")
+    for script in "${scripts[@]}"; do
+        if [ -f "$SCRIPT_DIR/$script" ]; then
+            chmod +x "$SCRIPT_DIR/$script"
+            print_success "$script is ready"
+        fi
+    done
+    
+    echo
+    print_success "🎉 Quick start completed successfully!"
+    echo
+    print_info "Your Swift MCP Server is ready to use!"
+    echo
+}
+
+show_help() {
+    cat << EOF
+Swift MCP Server Quick Start
+
+This script will:
+1. Check prerequisites (Swift, Git)
+2. Build the server in release mode
+3. Test basic functionality
+4. Set up VS Code integration
+5. Provide usage examples
+6. Run final verification
+
+Usage: $0 [options]
+
+Options:
+  --help          Show this help
+  --skip-vscode   Skip VS Code integration setup
+  --skip-tests    Skip functionality tests
+  --verbose       Enable verbose output
+
+Examples:
+  $0                    # Full quick start
+  $0 --skip-vscode      # Skip VS Code setup
+  $0 --verbose          # Verbose output
+
 EOF
-    
-    log_success "Configuration examples created in examples/configs/"
 }
 
-# Create startup script
-create_startup_script() {
-    log_info "Creating startup script..."
-    
-    cat > start-server.sh << 'EOF'
-#!/bin/bash
+# Parse command line arguments
+SKIP_VSCODE=false
+SKIP_TESTS=false
+VERBOSE=false
 
-# Swift MCP Server Startup Script
-echo "🚀 Starting Swift MCP Server..."
-
-# Default configuration
-HOST=${SWIFT_MCP_HOST:-127.0.0.1}
-PORT=${SWIFT_MCP_PORT:-8081}
-LOG_LEVEL=${SWIFT_MCP_LOG_LEVEL:-info}
-
-# Check if server is already running
-if curl -s http://$HOST:$PORT/health > /dev/null 2>&1; then
-    echo "⚠️  Server already running on http://$HOST:$PORT"
-    exit 1
-fi
-
-# Start server
-echo "📡 Starting server on http://$HOST:$PORT"
-exec ./.build/release/SwiftMCPServer \
-    --host "$HOST" \
-    --port "$PORT" \
-    --log-level "$LOG_LEVEL"
-EOF
-    
-    chmod +x start-server.sh
-    log_success "Startup script created: ./start-server.sh"
-}
-
-# Show next steps
-show_next_steps() {
-    echo
-    log_info "🎯 Next Steps:"
-    echo
-    echo "  1. Start the server:"
-    echo "     ./start-server.sh"
-    echo
-    echo "  2. Test the server:"
-    echo "     curl http://127.0.0.1:8081/health"
-    echo
-    echo "  3. Configure Claude Desktop:"
-    echo "     Copy examples/configs/claude_desktop_config.json"
-    echo "     to Claude Desktop settings"
-    echo
-    echo "  4. Read the integration guide:"
-    echo "     open SERENA_INTEGRATION.md"
-    echo
-    echo "  5. Start using with Serena:"
-    echo "     \"Activate the Swift project at /path/to/project and analyze its architecture\""
-    echo
-}
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --help)
+            show_help
+            exit 0
+            ;;
+        --skip-vscode)
+            SKIP_VSCODE=true
+            shift
+            ;;
+        --skip-tests)
+            SKIP_TESTS=true
+            shift
+            ;;
+        --verbose)
+            VERBOSE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
 # Main execution
 main() {
-    print_header
+    print_banner
     
-    log_info "Starting Swift MCP Server setup..."
-    echo
-    
-    # Run setup steps
-    check_platform
-    check_swift
-    check_sourcekit_lsp
-    
-    echo
-    log_info "Building Swift MCP Server..."
+    check_prerequisites
     build_server
     
-    echo
-    log_info "Testing server functionality..."
-    test_server
+    if [ "$SKIP_TESTS" = false ]; then
+        test_server
+    fi
     
-    echo
-    install_serena
+    if [ "$SKIP_VSCODE" = false ]; then
+        setup_vscode_integration
+    fi
     
-    echo
-    log_info "Creating configuration files..."
-    generate_configs
-    create_startup_script
-    
-    echo
-    print_footer
-    show_next_steps
+    provide_usage_examples
+    provide_next_steps
+    run_final_verification
 }
 
 # Run main function

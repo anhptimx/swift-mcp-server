@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "VS Code MCP Configuration for Swift MCP Server",
+  "description": "Complete configuration example with troubleshooting",
+  
+  "mcp": {
+    "servers": {
+      "swift-mcp-server": {
+        "command": "/absolute/path/to/swift-mcp-server/.build/release/swift-mcp-server",
+        "args": [
+          "--transport", "stdio",
+          "--workspace", "${workspaceFolder}",
+          "--log-level", "info"
+        ],
+        "env": {
+          "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Xcode.app/Contents/Developer/usr/bin",
+          "SWIFT_MCP_MODE": "vscode",
+          "SOURCEKIT_LSP_PATH": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp"
+        },
+        "cwd": "${workspaceFolder}",
+        "initializationOptions": {
+          "protocolVersion": "2024-11-05",
+          "capabilities": {
+            "tools": {},
+            "resources": {},
+            "experimental": {}
+          }
+        }
+      }
+    }
+  },
+
+  "_troubleshooting": {
+    "common_issues": {
+      "server_not_starting": {
+        "description": "MCP server fails to start",
+        "solutions": [
+          "Check if binary exists: ls -la /path/to/swift-mcp-server/.build/release/swift-mcp-server",
+          "Verify permissions: chmod +x /path/to/swift-mcp-server/.build/release/swift-mcp-server",
+          "Test manually: /path/to/swift-mcp-server/.build/release/swift-mcp-server --help",
+          "Check logs in VS Code Developer Tools"
+        ]
+      },
+      "path_issues": {
+        "description": "Command not found or path errors",
+        "solutions": [
+          "Use absolute paths instead of relative paths",
+          "Verify workspace folder exists and is accessible",
+          "Check PATH environment variable includes necessary directories",
+          "Ensure SourceKit-LSP is in PATH"
+        ]
+      },
+      "stdio_communication": {
+        "description": "STDIO transport not working",
+        "solutions": [
+          "Test STDIO manually with echo command",
+          "Check for JSON parsing errors in logs",
+          "Verify protocol version compatibility",
+          "Enable debug logging: --log-level debug"
+        ]
+      }
+    },
+    
+    "debugging_steps": [
+      {
+        "step": 1,
+        "action": "Verify server binary exists",
+        "command": "ls -la /path/to/swift-mcp-server/.build/release/swift-mcp-server"
+      },
+      {
+        "step": 2,
+        "action": "Test server manually",
+        "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server --transport stdio --workspace . --log-level debug"
+      },
+      {
+        "step": 3,
+        "action": "Check VS Code MCP extension logs",
+        "location": "VS Code Developer Tools -> Console"
+      },
+      {
+        "step": 4,
+        "action": "Verify environment variables",
+        "command": "echo $PATH && which sourcekit-lsp"
+      }
+    ]
+  },
+
+  "_configuration_variations": {
+    "development": {
+      "description": "Configuration for development with enhanced debugging",
+      "args": [
+        "--transport", "stdio",
+        "--workspace", "${workspaceFolder}",
+        "--log-level", "debug",
+        "--dev",
+        "--json-logs"
+      ]
+    },
+    
+    "production": {
+      "description": "Production configuration with optimized settings",
+      "args": [
+        "--transport", "stdio",
+        "--workspace", "${workspaceFolder}",
+        "--log-level", "info",
+        "--config", "${workspaceFolder}/swift-mcp-config.json"
+      ]
+    },
+    
+    "minimal": {
+      "description": "Minimal configuration for basic functionality",
+      "args": [
+        "--transport", "stdio",
+        "--workspace", "${workspaceFolder}"
+      ]
+    }
+  }
+}

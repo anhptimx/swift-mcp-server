@@ -208,6 +208,200 @@ swift test
 swift-mcp-server --transport http --dev --log-level debug --workspace .
 ```
 
+## Troubleshooting
+
+### Server Configuration Issues
+
+#### MCP Server Not Starting
+```bash
+# Check if server is running
+ps aux | grep swift-mcp-server
+
+# Test server health
+curl http://localhost:8080/health
+
+# Check logs for errors
+swift-mcp-server --log-level debug --workspace .
+```
+
+#### STDIO Transport Issues
+```bash
+# Test STDIO communication
+echo '{"jsonrpc": "2.0", "method": "initialize", "id": 1, "params": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}}}' | \
+  swift-mcp-server --transport stdio --workspace . --log-level debug
+
+# Expected output: JSON response with server capabilities
+```
+
+#### Port Conflicts
+```bash
+# Check port availability
+lsof -i :8080
+
+# Use auto port selection
+swift-mcp-server --port-min 8080 --port-max 8090
+
+# Check which port was selected from logs
+```
+
+### Path Issues
+
+#### Project Path Not Recognized
+```bash
+# Verify path exists and is accessible
+ls -la /path/to/your/swift/project
+
+# Check for Package.swift
+find /path/to/project -name "Package.swift" -type f
+
+# Use absolute paths
+swift-mcp-server --workspace "$(pwd)/path/to/project"
+
+# Check workspace permissions
+chmod -R 755 /path/to/your/project
+```
+
+#### SourceKit-LSP Path Issues
+```bash
+# Verify SourceKit-LSP installation
+which sourcekit-lsp
+
+# Expected: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp
+
+# If not found, install Xcode Command Line Tools
+xcode-select --install
+
+# Set correct Xcode path
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+### Dependencies Issues
+
+#### Swift Package Dependencies
+```bash
+# Resolve package dependencies
+swift package resolve
+
+# Update dependencies
+swift package update
+
+# Clean and rebuild
+swift package clean && swift build
+```
+
+#### VS Code MCP Extension Dependencies
+```bash
+# Install VS Code MCP extension
+code --install-extension your-mcp-extension
+
+# Check VS Code configuration
+cat ~/.vscode/settings.json | grep mcp
+
+# Restart VS Code after configuration changes
+```
+
+#### Serena Integration Dependencies
+```bash
+# Install UV package manager (required for Serena)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install Serena MCP
+uvx --from git+https://github.com/oraios/serena serena start-mcp-server
+
+# Verify Serena installation
+serena --version
+```
+
+### Common Configuration Fixes
+
+#### Fix VS Code Configuration
+```json
+{
+  "mcp.servers": {
+    "swift-mcp-server": {
+      "command": "/absolute/path/to/swift-mcp-server/.build/release/swift-mcp-server",
+      "args": [
+        "--transport", "stdio",
+        "--workspace", "${workspaceFolder}",
+        "--log-level", "info"
+      ],
+      "env": {
+        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Xcode.app/Contents/Developer/usr/bin"
+      },
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
+```
+
+#### Fix Environment Variables
+```bash
+# Add to ~/.zshrc or ~/.bashrc
+export PATH="/Applications/Xcode.app/Contents/Developer/usr/bin:$PATH"
+export SOURCEKIT_LSP_PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp"
+
+# Reload shell
+source ~/.zshrc
+```
+
+#### Debug Configuration
+```bash
+# Test with maximum verbosity
+swift-mcp-server \
+  --transport stdio \
+  --workspace "$(pwd)" \
+  --log-level trace \
+  --dev \
+  --json-logs
+
+# Check server capabilities
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"method": "initialize", "params": {"protocolVersion": "2024-11-05"}}'
+```
+
+### Health Check & Quick Fixes
+
+We provide automated scripts to help with setup and troubleshooting:
+
+#### Health Check Script
+
+Run the comprehensive health check:
+
+```bash
+./health-check.sh
+```
+
+This script verifies:
+- Swift installation and version
+- SourceKit-LSP availability  
+- Xcode path configuration
+- Server binary existence
+- Package dependencies
+- Transport modes functionality
+
+#### Quick Fix Script
+
+For automatic issue resolution:
+
+```bash
+# Run all fixes
+./quick-fix.sh all
+
+# Fix specific issues
+./quick-fix.sh permissions    # Fix file permissions
+./quick-fix.sh rebuild        # Clean rebuild  
+./quick-fix.sh vscode         # Fix VS Code config
+./quick-fix.sh sourcekit      # Fix SourceKit-LSP path
+./quick-fix.sh test          # Test functionality
+```
+
+The quick fix script automatically:
+- Fixes file permissions
+- Rebuilds the server cleanly
+- Creates proper VS Code MCP configuration
+- Sets up SourceKit-LSP paths
+- Tests server functionality
 ## Contributing
 
 1. Fork the repository
