@@ -6,7 +6,12 @@
     "transport": {
       "type": "http",
       "host": "127.0.0.1",
-      "port": 8081
+      "port": 8080,
+      "portRange": {
+        "min": 8080,
+        "max": 8090
+      },
+      "autoPortSelection": true
     },
     "capabilities": {
       "tools": ["find_symbols", "find_references", "get_definition", "get_hover_info", "format_document"],
