@@ -1,14 +1,39 @@
 # Swift MCP Server
 
-A professional Model Context Protocol (MCP) server implementation in Swift, providing advanced static analysis and architectural insights for Swift codebases with seamless [Serena MCP](https://github.com/oraios/serena) integration.
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20|%20Linux-blue.svg)](https://github.com/anhptimx/swift-mcp-server)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/anhptimx/swift-mcp-server/workflows/CI/badge.svg)](https://github.com/anhptimx/swift-mcp-server/actions)
+[![Swift 6](https://img.shields.io/badge/Swift%206-Compatible-red.svg)](https://swift.org)
 
-## Overview
+> A professional Model Context Protocol (MCP) server implementation in Swift, providing advanced static analysis and architectural insights for Swift codebases with seamless [Serena MCP](https://github.com/oraios/serena) integration.
 
-This server extends the standard MCP protocol with specialized tools for Swift project analysis, offering deep insights into code architecture, design patterns, and Protocol-Oriented Programming adoption. Built with Swift 5.9+ and integrated with SourceKit-LSP for accurate source code analysis.
+## 🎯 Overview
 
-**🚀 Perfect for Serena MCP Integration**: Transform your development workflow with powerful Swift-specific tools that integrate seamlessly with Serena's coding agent capabilities.
+This server extends the standard MCP protocol with specialized tools for Swift project analysis, offering deep insights into code architecture, design patterns, and Protocol-Oriented Programming adoption. Built with **Swift 6 language mode** and integrated with **SourceKit-LSP** for accurate source code analysis.
 
-## Key Features
+### ✨ Why Swift MCP Server?
+
+- 🚀 **Serena MCP Ready**: Perfect integration with Serena coding agents
+- ⚡ **Swift 6 Compliant**: Modern concurrency with zero warnings
+- 🔧 **15+ Specialized Tools**: Complete Swift analysis suite
+- 🎯 **Production Ready**: Enterprise-grade architecture and documentation
+- 📊 **Real-time Analysis**: Live compilation feedback and diagnostics
+
+## 📋 Table of Contents
+
+- [Key Features](#-key-features)
+- [Requirements](#-requirements)  
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [API Documentation](#-api-documentation)
+- [Serena Integration](#-serena-integration)
+- [Configuration](#-configuration)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+## 🌟 Key Features
 
 ### Advanced Analysis Capabilities
 - **Protocol-Oriented Programming Assessment**: Quantitative analysis with 0-100 scoring system
@@ -34,14 +59,17 @@ This server extends the standard MCP protocol with specialized tools for Swift p
 - **Scalable Architecture**: Modular design supporting large codebases with modern concurrency patterns
 - **Serena MCP Compatible**: Direct integration with Serena coding agents
 
-## Requirements
+## 📋 Requirements
 
-- **macOS 13.0+** or **Linux Ubuntu 18.04+**
-- **Swift 5.9+** with modern concurrency support  
-- **Xcode 15.0+** (macOS development)
-- **SourceKit-LSP** (bundled with Xcode)
+| Component | Version | Notes |
+|-----------|---------|--------|
+| **Swift** | 5.9+ | Modern concurrency support required |
+| **macOS** | 13.0+ | For macOS development |
+| **Linux** | Ubuntu 18.04+ | Alternative platform |
+| **Xcode** | 15.0+ | Includes SourceKit-LSP |
+| **SourceKit-LSP** | Latest | Bundled with Xcode |
 
-## Quick Start Guide
+## 🚀 Quick Start
 
 ### Automated Setup (Recommended)
 
@@ -619,6 +647,50 @@ Please include:
 - Minimal reproduction case
 - Expected vs actual behavior
 - Relevant log output (use `--verbose` flag)
+
+## 🎬 Demo
+
+### Quick Usage Example
+
+```bash
+# Start the server
+swift run SwiftMCPServer --workspace ./MySwiftProject
+
+# Test symbol search
+curl -X POST http://localhost:8081/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1, 
+    "method": "tools/call",
+    "params": {
+      "name": "find_symbols",
+      "arguments": {"pattern": "ViewController"}
+    }
+  }'
+```
+
+### Integration with Serena
+
+```json
+// .serena-config.json
+{
+  "mcpServers": {
+    "swift-language-server": {
+      "command": "swift",
+      "args": ["run", "SwiftMCPServer"],
+      "env": {"WORKSPACE_PATH": "./"}
+    }
+  }
+}
+```
+
+## 📈 Project Stats
+
+![GitHub Stars](https://img.shields.io/github/stars/anhptimx/swift-mcp-server?style=social)
+![GitHub Forks](https://img.shields.io/github/forks/anhptimx/swift-mcp-server?style=social)
+![GitHub Issues](https://img.shields.io/github/issues/anhptimx/swift-mcp-server)
+![GitHub Pull Requests](https://img.shields.io/github/issues-pr/anhptimx/swift-mcp-server)
 
 ## License
 
