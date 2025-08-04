@@ -44,12 +44,36 @@ public struct MCPRequest: Codable {
                     paramsDict[key.stringValue] = boolValue
                 } else if let doubleValue = try? paramsContainer.decode(Double.self, forKey: key) {
                     paramsDict[key.stringValue] = doubleValue
+                } else {
+                    // Handle nested objects
+                    if let nestedDict = try? MCPRequest.decodeNestedDict(container: paramsContainer, key: key) {
+                        paramsDict[key.stringValue] = nestedDict
+                    }
                 }
             }
             params = paramsDict
         } else {
             params = nil
         }
+    }
+    
+    private static func decodeNestedDict(container: KeyedDecodingContainer<DynamicCodingKey>, key: DynamicCodingKey) throws -> [String: Any] {
+        let nestedContainer = try container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: key)
+        var nestedDict: [String: Any] = [:]
+        
+        for nestedKey in nestedContainer.allKeys {
+            if let stringValue = try? nestedContainer.decode(String.self, forKey: nestedKey) {
+                nestedDict[nestedKey.stringValue] = stringValue
+            } else if let intValue = try? nestedContainer.decode(Int.self, forKey: nestedKey) {
+                nestedDict[nestedKey.stringValue] = intValue
+            } else if let boolValue = try? nestedContainer.decode(Bool.self, forKey: nestedKey) {
+                nestedDict[nestedKey.stringValue] = boolValue
+            } else if let doubleValue = try? nestedContainer.decode(Double.self, forKey: nestedKey) {
+                nestedDict[nestedKey.stringValue] = doubleValue
+            }
+        }
+        
+        return nestedDict
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -77,7 +101,7 @@ public struct MCPRequest: Codable {
     }
 }
 
-public struct MCPResponse: Codable {
+public struct MCPResponse: Codable, Sendable {
     public let jsonrpc: String
     public let id: RequestID?
     public let result: Data?
@@ -91,7 +115,7 @@ public struct MCPResponse: Codable {
     }
 }
 
-public enum RequestID: Codable {
+public enum RequestID: Codable, Sendable {
     case string(String)
     case number(Int)
     

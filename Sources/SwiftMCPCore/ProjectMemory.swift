@@ -1,7 +1,7 @@
 import Foundation
 import Logging
 
-/// Intelligent Project Memory System with Pattern Learning
+/// Enhanced Intelligent Project Memory System with Modern Concurrency
 public actor IntelligentProjectMemory {
     private let logger: Logger
     private let projectPath: URL
@@ -9,14 +9,19 @@ public actor IntelligentProjectMemory {
     private var analysisCache: [String: IntelligentAnalysisResult] = [:]
     private var patternHistory: [ProjectPattern] = []
     
-    public init(projectPath: URL, logger: Logger) {
+    // Modern concurrency integration
+    private var modernConcurrency: ModernConcurrencyIntegration?
+    
+    public init(projectPath: URL, logger: Logger, modernConcurrency: ModernConcurrencyIntegration? = nil) {
         self.projectPath = projectPath
         self.logger = logger
+        self.modernConcurrency = modernConcurrency
         self.memoryDirectory = projectPath.appendingPathComponent(".swift-mcp-memory", isDirectory: true)
         
-        Task {
-            await setupMemoryDirectory()
-            await loadExistingMemory()
+        // Do setup asynchronously without blocking initialization
+        Task.detached {
+            await self.setupMemoryDirectory()
+            await self.loadExistingMemory()
         }
     }
     
@@ -25,7 +30,7 @@ public actor IntelligentProjectMemory {
     private func setupMemoryDirectory() {
         do {
             try FileManager.default.createDirectory(at: memoryDirectory, withIntermediateDirectories: true)
-            logger.info("📁 Project memory directory created at: \(memoryDirectory.path)")
+            logger.info("📁 Enhanced project memory directory created at: \(memoryDirectory.path)")
         } catch {
             logger.error("❌ Failed to create memory directory: \(error)")
         }
@@ -35,7 +40,7 @@ public actor IntelligentProjectMemory {
         let memoryFile = memoryDirectory.appendingPathComponent("project-memory.json")
         
         guard FileManager.default.fileExists(atPath: memoryFile.path) else {
-            logger.info("🆕 No existing project memory found, starting fresh")
+            logger.info("🆕 No existing project memory found, starting fresh with modern concurrency")
             return
         }
         
@@ -46,7 +51,7 @@ public actor IntelligentProjectMemory {
             self.analysisCache = memory.analysisCache
             self.patternHistory = memory.patternHistory
             
-            logger.info("🧠 Loaded project memory with \(analysisCache.count) cached analyses")
+            logger.info("🧠 Loaded enhanced project memory with \(analysisCache.count) cached analyses")
         } catch {
             logger.error("❌ Failed to load project memory: \(error)")
         }

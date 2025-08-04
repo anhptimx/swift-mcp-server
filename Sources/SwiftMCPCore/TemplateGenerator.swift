@@ -142,7 +142,7 @@ Add this package to your `Package.swift`:
 import \(name)
 
 let library = \(name)()
-print(library.hello())
+library.hello()
 ```
 
 ## License

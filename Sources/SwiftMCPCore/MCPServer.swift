@@ -13,12 +13,16 @@ public final class MCPServer: @unchecked Sendable {
     
     private let swiftLanguageServer: SwiftLanguageServer
     private let mcpProtocolHandler: MCPProtocolHandler
+    private let modernConcurrency: ModernConcurrencyIntegration
     
     public init(host: String, port: Int, logger: Logger, workspaceRoot: URL? = nil) {
         self.host = host
         self.port = port
         self.logger = logger
         self.group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        
+        // Initialize modern concurrency integration
+        self.modernConcurrency = ModernConcurrencyIntegration(logger: logger)
         
         self.swiftLanguageServer = SwiftLanguageServer(logger: logger, workspaceRoot: workspaceRoot)
         self.mcpProtocolHandler = MCPProtocolHandler(
@@ -54,17 +58,35 @@ public final class MCPServer: @unchecked Sendable {
         let channel = try await bootstrap.bind(host: host, port: port).get()
         self.channel = channel
         
-        logger.info("Swift MCP Server started on \(host):\(port)")
-        logger.info("Server is ready to handle MCP requests")
+        logger.info("🚀 Swift MCP Server started on \(host):\(port)")
+        logger.info("📊 Modern concurrency enabled with enhanced task management")
+        logger.info("🛠️ Server is ready to handle MCP requests")
+        
+        // Log resource usage
+        let resourceUsage = await modernConcurrency.getResourceUsage()
+        logger.info("💾 Initial resource usage - Memory: \(resourceUsage.memoryMB)MB, CPU: \(resourceUsage.cpuPercentage)%, Network: \(resourceUsage.networkOperations)")
         
         // Wait until the server is closed
         try await channel.closeFuture.get()
     }
     
     public func stop() async throws {
+        logger.info("🔄 Shutting down Swift MCP Server...")
+        
+        // Shutdown modern concurrency integration first
+        await modernConcurrency.shutdown()
+        
         await swiftLanguageServer.shutdown()
         try await channel?.close()
         try await group.shutdownGracefully()
-        logger.info("Swift MCP Server stopped")
+        
+        logger.info("✅ Swift MCP Server stopped")
+    }
+    
+    // MARK: - Modern Concurrency Access
+    
+    /// Provide access to modern concurrency features for advanced operations
+    public var concurrencyManager: ModernConcurrencyIntegration {
+        return modernConcurrency
     }
 }

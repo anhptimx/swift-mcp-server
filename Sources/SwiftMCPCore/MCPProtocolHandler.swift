@@ -307,47 +307,51 @@ public final class MCPProtocolHandler {
     }
     
     private func handleToolCall(_ request: MCPRequest) async throws -> MCPResponse {
-        guard let params = request.params,
-              let paramsData = try? JSONSerialization.data(withJSONObject: params),
-              let toolCall = try? JSONDecoder().decode(ToolCallParams.self, from: paramsData) else {
+        guard let params = request.params else {
             throw MCPError.invalidParams
         }
         
+        guard let name = params["name"] as? String else {
+            throw MCPError.invalidParams
+        }
+        
+        let arguments = params["arguments"] as? [String: Any] ?? [:]
+        
         let result: Any
         
-        switch toolCall.name {
+        switch name {
         case "find_symbols":
-            result = try await handleFindSymbols(toolCall.arguments)
+            result = try await handleFindSymbols(arguments)
         case "find_references":
-            result = try await handleFindReferences(toolCall.arguments)
+            result = try await handleFindReferences(arguments)
         case "get_definition":
-            result = try await handleGetDefinition(toolCall.arguments)
+            result = try await handleGetDefinition(arguments)
         case "get_hover_info":
-            result = try await handleGetHoverInfo(toolCall.arguments)
+            result = try await handleGetHoverInfo(arguments)
         case "format_document":
-            result = try await handleFormatDocument(toolCall.arguments)
+            result = try await handleFormatDocument(arguments)
         case "analyze_project":
-            result = try await handleAnalyzeProject(toolCall.arguments)
+            result = try await handleAnalyzeProject(arguments)
         case "detect_architecture":
-            result = try await handleDetectArchitecture(toolCall.arguments)
+            result = try await handleDetectArchitecture(arguments)
         case "analyze_symbol_usage":
-            result = try await handleAnalyzeSymbolUsage(toolCall.arguments)
+            result = try await handleAnalyzeSymbolUsage(arguments)
         case "create_project_memory":
-            result = try await handleCreateProjectMemory(toolCall.arguments)
+            result = try await handleCreateProjectMemory(arguments)
         case "generate_migration_plan":
-            result = try await handleGenerateMigrationPlan(toolCall.arguments)
+            result = try await handleGenerateMigrationPlan(arguments)
         case "analyze_pop_usage":
-            result = try await handleAnalyzePOPUsage(toolCall.arguments)
+            result = try await handleAnalyzePOPUsage(arguments)
         case "intelligent_project_memory":
-            result = try await handleIntelligentProjectMemory(toolCall.arguments)
+            result = try await handleIntelligentProjectMemory(arguments)
         case "generate_documentation":
-            result = try await handleGenerateDocumentation(toolCall.arguments)
+            result = try await handleGenerateDocumentation(arguments)
         case "analyze_ios_frameworks":
-            result = try await handleAnalyzeiOSFrameworks(toolCall.arguments)
+            result = try await handleAnalyzeiOSFrameworks(arguments)
         case "generate_template":
-            result = try await handleGenerateTemplate(toolCall.arguments)
+            result = try await handleGenerateTemplate(arguments)
         default:
-            throw MCPError.toolNotFound(toolCall.name)
+            throw MCPError.toolNotFound(name)
         }
         
         let toolResult = ToolCallResult(
@@ -489,7 +493,7 @@ public final class MCPProtocolHandler {
     // MARK: - Enhanced Analysis Tools
     
     private func handleAnalyzeProject(_ arguments: [String: Any]) async throws -> String {
-        guard let projectPath = arguments["project_path"] as? String else {
+        guard let projectPath = arguments["path"] as? String ?? arguments["project_path"] as? String else {
             throw MCPError.invalidParams
         }
         
@@ -507,7 +511,7 @@ public final class MCPProtocolHandler {
     }
     
     private func handleDetectArchitecture(_ arguments: [String: Any]) async throws -> String {
-        guard let projectPath = arguments["project_path"] as? String else {
+        guard let projectPath = arguments["path"] as? String ?? arguments["project_path"] as? String else {
             throw MCPError.invalidParams
         }
         
@@ -519,7 +523,7 @@ public final class MCPProtocolHandler {
     }
     
     private func handleAnalyzeSymbolUsage(_ arguments: [String: Any]) async throws -> String {
-        guard let projectPath = arguments["project_path"] as? String,
+        guard let projectPath = arguments["path"] as? String ?? arguments["project_path"] as? String,
               let symbolName = arguments["symbol_name"] as? String else {
             throw MCPError.invalidParams
         }

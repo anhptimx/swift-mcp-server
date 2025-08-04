@@ -3,7 +3,14 @@ import Foundation
 import Logging
 import SwiftMCPCore
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, *)
+@main
+struct SwiftMCPApp {
+    static func main() async throws {
+        await SwiftMCPServer.main()
+    }
+}
+
+// Swift MCP Server Command - no @main needed, will be called directly
 struct SwiftMCPServer: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "swift-mcp-server",
@@ -26,7 +33,7 @@ struct SwiftMCPServer: AsyncParsableCommand {
     @Flag(name: .long, help: "Enable verbose logging")
     var verbose: Bool = false
     
-    func run() async throws {
+    mutating func run() async throws {
         // Setup logging
         var logger = Logger(label: "swift-mcp-server")
         logger.logLevel = parseLogLevel(logLevel)
@@ -69,20 +76,4 @@ struct SwiftMCPServer: AsyncParsableCommand {
         default: return .info
         }
     }
-}
-
-// Use RunLoop to handle async execution properly
-if #available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, *) {
-    Task {
-        do {
-            _ = try SwiftMCPServer.parseAsRoot()
-        } catch {
-            print("Error: \(error)")
-            Foundation.exit(1)
-        }
-    }
-    RunLoop.main.run()
-} else {
-    print("This application requires macOS 10.15, iOS 13, watchOS 6, or tvOS 13 or later.")
-    Foundation.exit(1)
 }

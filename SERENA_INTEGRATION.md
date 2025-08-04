@@ -1,53 +1,43 @@
-# Serena MCP Integration Guide
+# Swift MCP Server - Serena Integration Guide
 
-This guide explains how to integrate the Swift MCP Server with Serena MCP for comprehensive Swift language support.
+## Overview
+
+This Swift MCP Server provides seamless integration with [Serena MCP](https://github.com/oraios/serena), enabling semantic Swift code analysis and intelligent development workflows. The server implements the Model Context Protocol (MCP) to provide powerful Swift language support for Serena's coding agent capabilities.
+
+## What is Serena?
+
+Serena is a powerful coding agent toolkit that turns LLMs into fully-featured development agents. It provides:
+- 🔧 Semantic code retrieval and editing tools (like IDE capabilities)
+- 🚀 Symbol-level code understanding and manipulation
+- 🆓 Free & open-source alternative to subscription-based coding agents
+- 📱 MCP integration with Claude Desktop, Claude Code, VSCode, Cursor, and more
 
 ## Prerequisites
 
-1. **Swift MCP Server**: Ensure the Swift MCP Server is built and running
-2. **Serena MCP**: Have Serena MCP installed and configured
-3. **SourceKit-LSP**: Available through Xcode installation
+- macOS 13.0+ (required for SourceKit-LSP)
+- Swift 5.9+
+- Xcode Command Line Tools
+- UV package manager (for Serena)
 
-## Configuration
+## Installation & Setup
 
-### 1. Start Swift MCP Server
+### 1. Install Serena
 
+First, install UV if you haven't already:
 ```bash
-# Build the server
-swift build -c release
-
-# Start the server
-.build/release/swift-mcp-server --host 127.0.0.1 --port 8080 --verbose
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 2. Configure Serena MCP
-
-Add the Swift MCP server to your Serena MCP configuration:
-
-```json
-{
-  "mcpServers": {
-    "swift-language-server": {
-      "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
-      "args": ["--host", "127.0.0.1", "--port", "8080"],
-      "env": {
-        "SOURCEKIT_LSP_SERVER_PATH": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp"
-      },
-      "transport": {
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 8080
-      }
-    }
-  }
-}
-```
-
-### 3. Verify Integration
-
-Test the integration by calling the Swift tools through Serena:
-
+Then install Serena:
 ```bash
+# Using uvx (recommended)
+uvx --from git+https://github.com/oraios/serena serena start-mcp-server
+
+# Or clone locally
+git clone https://github.com/oraios/serena
+cd serena
+uv run serena config edit  # Optional: edit configuration
+```
 # Test symbol search
 serena-mcp call swift-language-server find_symbols --file-path "/path/to/MyClass.swift" --name-pattern "MyClass"
 
@@ -107,109 +97,319 @@ references = serena.call_tool("swift-language-server", "find_references", {
     "file_path": "/project/Sources/MyApp/Models/User.swift",
     "line": 15,
     "character": 8
-})
+## Usage Examples
 
-# Navigate to definition
-definition = serena.call_tool("swift-language-server", "get_definition", {
-    "file_path": "/project/Sources/MyApp/ViewModels/UserViewModel.swift",
-    "line": 20,
-    "character": 12
-})
+### Basic Project Analysis
+
+```bash
+# Start a conversation in Claude Desktop
+"Activate the Swift project at /Users/myuser/MySwiftApp and analyze its architecture"
+
+# Serena will:
+# 1. Activate the project using its tools
+# 2. Call Swift MCP Server to analyze the project
+# 3. Provide comprehensive analysis with architectural insights
 ```
 
-### 3. Code Formatting
-```python
-# Format a Swift file
-formatted = serena.call_tool("swift-language-server", "format_document", {
-    "file_path": "/project/Sources/MyApp/Views/UserView.swift"
-})
+### Code Refactoring Workflow
+
+```bash
+# In Claude Desktop or Claude Code
+"Help me refactor the networking layer in my Swift app to use async/await"
+
+# Combined workflow:
+# 1. Serena finds relevant networking symbols
+# 2. Swift MCP Server analyzes current patterns
+# 3. Serena suggests and implements refactoring
+# 4. Swift MCP Server validates changes
 ```
 
-## Advanced Configuration
+### Documentation Generation
 
-### Custom SourceKit-LSP Path
+```bash
+"Generate comprehensive documentation for my Swift framework"
 
-If you have a custom SourceKit-LSP installation:
-
-```json
-{
-  "mcpServers": {
-    "swift-language-server": {
-      "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
-      "args": ["--host", "127.0.0.1", "--port", "8080"],
-      "env": {
-        "SOURCEKIT_LSP_SERVER_PATH": "/usr/local/bin/sourcekit-lsp",
-        "TOOLCHAIN_PATH": "/usr/local/swift"
-      }
-    }
-  }
-}
+# Process:
+# 1. Swift MCP Server analyzes all public APIs
+# 2. Generates documentation with examples
+# 3. Serena organizes and formats output
+# 4. Creates proper DocC documentation structure
 ```
 
-### Multiple Swift Projects
+## Configuration Options
 
-For multiple Swift projects, you can run multiple instances:
+### Swift MCP Server Configuration
 
-```json
-{
-  "mcpServers": {
-    "swift-project-a": {
-      "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
-      "args": ["--host", "127.0.0.1", "--port", "8080"],
-      "env": {
-        "WORKSPACE_ROOT": "/path/to/project-a"
-      }
-    },
-    "swift-project-b": {
-      "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
-      "args": ["--host", "127.0.0.1", "--port", "8081"],
-      "env": {
-        "WORKSPACE_ROOT": "/path/to/project-b"
-      }
-    }
-  }
-}
+Environment variables:
+```bash
+export SWIFT_MCP_HOST=127.0.0.1
+export SWIFT_MCP_PORT=8081
+export SWIFT_MCP_LOG_LEVEL=info
+export SOURCEKIT_LSP_PATH=/usr/bin/sourcekit-lsp
+```
+
+Command line options:
+```bash
+./.build/release/SwiftMCPServer \
+  --host 127.0.0.1 \
+  --port 8081 \
+  --log-level info \
+  --enable-cors \
+  --project-root /path/to/project
+```
+
+### Serena Configuration
+
+Create `.serena/project.yml` in your Swift project:
+```yaml
+name: "MySwiftApp"
+language: "swift"
+build_command: "swift build"
+test_command: "swift test"
+format_command: "swift-format format"
+lint_command: "swiftlint lint"
+
+swift_specific:
+  sourcekit_lsp: true
+  target_platform: "ios"
+  min_version: "15.0"
+  
+integration:
+  swift_mcp_server: "http://127.0.0.1:8081"
+  enable_symbol_analysis: true
+  auto_documentation: true
+```
+
+## Advanced Features
+
+### Project Memory & Learning
+
+Serena can create persistent memories about your Swift projects:
+```bash
+"Learn about this Swift project and remember its patterns for future sessions"
+
+# Creates memories about:
+# - Architecture patterns used
+# - Common naming conventions
+# - Key frameworks and dependencies
+# - Testing strategies
+# - Build configurations
+```
+
+### Multi-Target Analysis
+
+For complex Swift projects with multiple targets:
+```bash
+"Analyze all targets in this workspace and show their relationships"
+
+# Provides:
+# - Target dependency graph
+# - Shared code analysis
+# - Cross-target symbol usage
+# - Build configuration differences
+```
+
+### iOS Framework Integration
+
+Specialized analysis for iOS/macOS development:
+```bash
+"Analyze this iOS app for SwiftUI best practices and suggest improvements"
+
+# Includes:
+# - SwiftUI view hierarchy analysis
+# - State management patterns
+# - Performance optimization suggestions
+# - Accessibility compliance checks
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Server not starting**: Check that the port is not in use
-2. **SourceKit-LSP not found**: Ensure Xcode is installed or set `SOURCEKIT_LSP_SERVER_PATH`
-3. **Permission denied**: Make sure the executable has proper permissions
+1. **SourceKit-LSP not found**
+   ```bash
+   # Install Xcode Command Line Tools
+   xcode-select --install
+   
+   # Verify SourceKit-LSP installation
+   which sourcekit-lsp
+   ```
+
+2. **Swift MCP Server not responding**
+   ```bash
+   # Check if server is running
+   curl http://127.0.0.1:8081/health
+   
+   # Check logs
+   tail -f swift-mcp-server.log
+   ```
+
+3. **Serena can't connect to Swift MCP Server**
+   ```bash
+   # Verify network connectivity
+   nc -zv 127.0.0.1 8081
+   
+   # Check firewall settings
+   sudo lsof -i :8081
+   ```
+
+4. **Claude Desktop not recognizing tools**
+   - Fully quit Claude Desktop (check system tray)
+   - Verify JSON configuration syntax
+   - Check MCP server logs for errors
 
 ### Debug Mode
 
-Run with verbose logging to troubleshoot issues:
-
+Enable debug logging:
 ```bash
-.build/release/swift-mcp-server --verbose --log-level debug
+# Swift MCP Server
+./.build/debug/SwiftMCPServer --log-level debug
+
+# Serena
+uv run serena start-mcp-server --log-level debug
 ```
 
-### Logs
+### Performance Optimization
 
-Monitor Serena MCP logs for integration issues:
-
+For large Swift projects:
 ```bash
-tail -f ~/.serena-mcp/logs/swift-language-server.log
+# Index project for faster analysis
+cd /path/to/swift/project
+serena project index
+
+# Use build cache
+swift build --enable-build-cache
+
+# Exclude generated files
+echo "/.build\n/DerivedData\n*.xcodeproj" >> .gitignore
 ```
 
-## Performance Considerations
+## Best Practices
 
-- The Swift MCP Server uses SourceKit-LSP which may take time to index large projects
-- Consider warming up the server by accessing a few symbols after startup
-- For large codebases, the initial symbol search may be slower
+### Project Structure
 
-## Security
+Organize your Swift project for optimal analysis:
+```
+MySwiftApp/
+├── Sources/
+│   ├── Core/           # Core business logic
+│   ├── UI/            # User interface components
+│   ├── Data/          # Data layer
+│   └── Utils/         # Utilities and extensions
+├── Tests/
+├── Documentation/
+├── .serena/           # Serena project configuration
+└── Package.swift      # Swift Package Manager
+```
 
-- The server only accepts connections from localhost by default
-- For remote access, use SSH tunneling or VPN
-- Consider firewall rules for production deployments
+### Workflow Recommendations
 
-## Support
+1. **Start with Analysis**: Always begin sessions with project analysis
+2. **Use Memories**: Let Serena learn your project patterns
+3. **Iterative Development**: Make small, testable changes
+4. **Documentation First**: Generate docs before major refactoring
+5. **Test Integration**: Leverage Swift's testing frameworks
 
-For issues specific to Serena MCP integration:
-1. Check both Swift MCP Server and Serena MCP logs
-2. Verify the configuration matches the expected format
-3. Test tools individually before debugging the integration
+### Code Quality
+
+Configure quality tools:
+```yaml
+# .serena/project.yml
+quality_tools:
+  linter: "swiftlint"
+  formatter: "swift-format"
+  analyzer: "swift-mcp-server"
+  
+checks:
+  - "swift_conventions"
+  - "memory_management"
+  - "performance_patterns"
+  - "security_practices"
+```
+
+## Examples & Templates
+
+### SwiftUI App Template
+
+```swift
+// Template generated by Swift MCP Server + Serena
+import SwiftUI
+
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+struct ContentView: View {
+    @StateObject private var viewModel = ContentViewModel()
+    
+    var body: some View {
+        NavigationView {
+            // Generated UI code
+        }
+        .environmentObject(viewModel)
+    }
+}
+```
+
+### Package.swift Template
+
+```swift
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "MySwiftPackage",
+    platforms: [
+        .macOS(.v13),
+        .iOS(.v16)
+    ],
+    products: [
+        .library(name: "MySwiftPackage", targets: ["MySwiftPackage"])
+    ],
+    dependencies: [
+        // Add your dependencies here
+    ],
+    targets: [
+        .target(name: "MySwiftPackage"),
+        .testTarget(name: "MySwiftPackageTests", dependencies: ["MySwiftPackage"])
+    ]
+)
+```
+
+## Support & Community
+
+### Getting Help
+
+- 📖 [Serena Documentation](https://github.com/oraios/serena)
+- 🚀 [Swift MCP Server Repository](https://github.com/anhptimx/swift-mcp-server)
+- 🐛 [Report Issues](https://github.com/anhptimx/swift-mcp-server/issues)
+- 💬 [Discussions](https://github.com/oraios/serena/discussions)
+- 📧 Community Support: serena-mcp@oraios-ai.de
+
+### Contributing
+
+We welcome contributions! Areas where help is needed:
+- Additional Swift-specific tools
+- iOS/macOS framework integrations
+- Performance optimizations
+- Documentation improvements
+- Testing and bug reports
+
+### Community Projects
+
+Join the growing community of Serena + Swift MCP users:
+- Share your configurations and workflows
+- Contribute Swift-specific templates
+- Help test new features
+- Translate documentation
+
+## Conclusion
+
+The Swift MCP Server + Serena integration provides a powerful, free alternative to subscription-based coding assistants. With semantic Swift understanding, intelligent code analysis, and seamless MCP integration, it enables productive Swift development workflows while keeping you in control of your tools and costs.
+
+Start exploring by activating your first Swift project and letting Serena learn your codebase!

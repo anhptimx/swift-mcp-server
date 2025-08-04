@@ -6,7 +6,7 @@
     "transport": {
       "type": "http",
       "host": "127.0.0.1",
-      "port": 8080
+      "port": 8081
     },
     "capabilities": {
       "tools": ["find_symbols", "find_references", "get_definition", "get_hover_info", "format_document"],
