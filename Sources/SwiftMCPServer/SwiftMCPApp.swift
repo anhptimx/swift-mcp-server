@@ -64,6 +64,9 @@ struct SwiftMCPServer: AsyncParsableCommand {
                                            discussion: "Enables enhanced analysis with project context"))
     var workspace: String?
     
+    @Argument(help: "Workspace path (alternative to --workspace)")
+    var workspacePath: String?
+    
     @Option(name: .long, help: ArgumentHelp("Configuration file path", 
                                            discussion: "JSON config for enterprise deployment"))
     var config: String?
@@ -105,8 +108,9 @@ struct SwiftMCPServer: AsyncParsableCommand {
         // Log startup information
         logStartupInfo(logger: logger)
         
-        // Create workspace URL if provided
-        let workspaceURL = workspace.map { URL(fileURLWithPath: $0) }
+        // Determine workspace path (prioritize --workspace over positional argument)
+        let resolvedWorkspace = workspace ?? workspacePath
+        let workspaceURL = resolvedWorkspace.map { URL(fileURLWithPath: $0) }
         
         // Validate workspace if provided
         if let workspaceURL = workspaceURL {
@@ -224,8 +228,9 @@ struct SwiftMCPServer: AsyncParsableCommand {
         logger.info("🔄 Transport: \(transport)")
         logger.info("📊 Log Level: \(verbose ? "trace" : logLevel.rawValue)")
         
-        if let workspace = workspace {
-            logger.info("📁 Workspace: \(workspace)")
+        let resolvedWorkspace = workspace ?? workspacePath
+        if let resolvedWorkspace = resolvedWorkspace {
+            logger.info("📁 Workspace: \(resolvedWorkspace)")
         }
         
         if transport == .http {

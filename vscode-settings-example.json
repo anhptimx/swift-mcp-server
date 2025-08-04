@@ -5,8 +5,7 @@
         "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
         "args": [
           "--transport", "stdio",
-          "--workspace", "${workspaceFolder}",
-          "--log-level", "info"
+          "${workspaceFolder}"
         ],
         "env": {
           "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Xcode.app/Contents/Developer/usr/bin",

@@ -24,8 +24,7 @@ Copy this configuration to your VS Code `settings.json`:
         "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
         "args": [
           "--transport", "stdio",
-          "--workspace", "${workspaceFolder}",
-          "--log-level", "info"
+          "${workspaceFolder}"
         ],
         "env": {
           "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Xcode.app/Contents/Developer/usr/bin",
@@ -37,16 +36,33 @@ Copy this configuration to your VS Code `settings.json`:
 }
 ```
 
+**Alternative with explicit --workspace flag:**
+```json
+"args": [
+  "--transport", "stdio",
+  "--workspace", "${workspaceFolder}"
+]
+```
+
 ### 2. **Use Absolute Paths**
 
 ❌ **Wrong**: `"command": "swift-mcp-server"`
 ✅ **Correct**: `"command": "/full/path/to/.build/release/swift-mcp-server"`
 
-### 3. **Verify Working Directory**
+### 3. **Check Arguments Format**
+
+The server now supports both formats:
+
+✅ **Positional argument**: `["--transport", "stdio", "${workspaceFolder}"]`
+✅ **Named argument**: `["--transport", "stdio", "--workspace", "${workspaceFolder}"]`
+
+Choose the format that works with your VS Code MCP extension.
+
+### 4. **Verify Working Directory**
 
 Make sure VS Code is opening the workspace that contains your Swift MCP Server binary.
 
-### 4. **Check Permissions**
+### 5. **Check Permissions**
 
 ```bash
 # Ensure binary is executable
@@ -56,7 +72,7 @@ chmod +x /path/to/swift-mcp-server/.build/release/swift-mcp-server
 /path/to/swift-mcp-server/.build/release/swift-mcp-server --help
 ```
 
-### 5. **Test STDIO Mode**
+### 6. **Test STDIO Mode**
 
 ```bash
 # Manual test
@@ -88,7 +104,7 @@ If working correctly, you should see:
 
 ## 📋 Common Issues
 
+- **Argument parsing errors**: Use positional arguments `["--transport", "stdio", "${workspaceFolder}"]` instead of `--workspace` flag
 - **Path issues**: Use absolute paths, not relative
-- **Workspace mismatch**: Ensure VS Code workspace matches server workspace
-- **Missing arguments**: Don't forget `--transport stdio` and `--workspace`
+- **Workspace mismatch**: Ensure VS Code workspace matches server workspace  
 - **Environment**: Make sure PATH includes necessary directories
