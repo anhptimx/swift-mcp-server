@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CI](https://github.com/anhptimx/swift-mcp-server/workflows/CI/badge.svg)](https://github.com/anhptimx/swift-mcp-server/actions)
 [![Swift 6](https://img.shields.io/badge/Swift%206-Compatible-red.svg)](https://swift.org)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/anhptimx/swift-mcp-server/ci.yml?branch=main)](https://github.com/anhptimx/swift-mcp-server/actions)
 
 > A professional Model Context Protocol (MCP) server implementation in Swift, providing advanced static analysis and architectural insights for Swift codebases with seamless [Serena MCP](https://github.com/oraios/serena) integration.
 
