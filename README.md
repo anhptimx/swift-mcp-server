@@ -135,26 +135,33 @@ swift build --configuration release
 #### Step 3: Start the Server
 
 ```bash
-# Start with default settings
-./.build/release/SwiftMCPServer
+# Start with default settings (port 8080)
+./.build/release/swift-mcp-server
 
-# Start with custom configuration
-./.build/release/SwiftMCPServer \
+# Start with auto port selection (recommended)
+./.build/release/swift-mcp-server \
   --host 127.0.0.1 \
-  --port 8081 \
+  --port-min 8080 \
+  --port-max 8090 \
+  --log-level info
+
+# Start with fixed port
+./.build/release/swift-mcp-server \
+  --host 127.0.0.1 \
+  --port 8080 \
   --log-level info
 ```
 
 #### Step 4: Verify Installation
 
 ```bash
-# Test server health
-curl http://127.0.0.1:8081/health
+# Test server health (adjust port if using auto-selection)
+curl http://127.0.0.1:8080/health
 
 # Expected response: {"status": "healthy", "server": "SwiftMCPServer"}
 
 # Test MCP tools
-curl -X POST http://127.0.0.1:8081/mcp \
+curl -X POST http://127.0.0.1:8080/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/list",
@@ -235,6 +242,362 @@ Serena + Swift MCP Server will:
 3. Provide detailed insights and suggestions
 4. Enable intelligent code editing and navigation
 
+## 📝 VS Code Configuration
+
+### Setup Swift MCP Server with VS Code
+
+#### Step 1: Install VS Code Extensions
+
+Install essential Swift development extensions:
+
+```bash
+# Install via command line
+code --install-extension swift-server.swift
+code --install-extension ms-vscode.vscode-json
+code --install-extension bradlc.vscode-tailwindcss  # For web interface if needed
+```
+
+Or manually install:
+- **Swift** by Swift Server Work Group
+- **Swift Syntax** for syntax highlighting
+- **CodeLLDB** for debugging Swift applications
+
+#### Step 2: VS Code Workspace Configuration
+
+Create `.vscode/settings.json` in your Swift project:
+
+```json
+{
+  "swift.path": "/usr/bin/swift",
+  "sourcekit-lsp.serverPath": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp",
+  "swift.sourcekit-lsp.serverPath": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp",
+  "swift.buildOnSave": true,
+  "swift.diagnostics": true,
+  
+  // MCP Server integration
+  "mcp.servers": {
+    "swift-mcp-server": {
+      "url": "http://127.0.0.1:8080",
+      "enabled": true,
+      "autoStart": true
+    }
+  },
+  
+  // File associations
+  "files.associations": {
+    "*.swift": "swift",
+    "Package.swift": "swift",
+    "Package.resolved": "json"
+  },
+  
+  // Editor settings for Swift
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  }
+}
+```
+
+#### Step 3: VS Code Tasks Configuration
+
+Create `.vscode/tasks.json` for build and run tasks:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Swift Build",
+      "type": "shell",
+      "command": "swift",
+      "args": ["build"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": {
+        "owner": "swift",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "Swift MCP Server Start",
+      "type": "shell",
+      "command": "swift",
+      "args": [
+        "run", "swift-mcp-server",
+        "--port-min", "8080",
+        "--port-max", "8090",
+        "--workspace", "${workspaceFolder}",
+        "--verbose"
+      ],
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^🚀 Swift MCP Server started on (.*):(\\d+)$",
+          "file": 1,
+          "line": 2
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^Starting Swift MCP Server",
+          "endsPattern": "^🚀 Swift MCP Server started on"
+        }
+      }
+    },
+    {
+      "label": "Swift Test",
+      "type": "shell",
+      "command": "swift",
+      "args": ["test"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Swift MCP Analyze Project",
+      "type": "shell",
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "http://127.0.0.1:8080/mcp",
+        "-H", "Content-Type: application/json",
+        "-d", "{\"method\": \"tools/call\", \"params\": {\"name\": \"analyze_project\", \"arguments\": {\"project_path\": \"${workspaceFolder}\"}}}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    }
+  ]
+}
+```
+
+#### Step 4: VS Code Launch Configuration
+
+Create `.vscode/launch.json` for debugging:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Swift MCP Server",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.build/debug/swift-mcp-server",
+      "args": [
+        "--host", "127.0.0.1",
+        "--port", "8080",
+        "--workspace", "${workspaceFolder}",
+        "--log-level", "debug"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "environment": [
+        {
+          "name": "SWIFT_MCP_DEBUG",
+          "value": "1"
+        }
+      ],
+      "preLaunchTask": "Swift Build"
+    },
+    {
+      "name": "Debug Swift Project",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.build/debug/YourSwiftApp",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
+```
+
+#### Step 5: Custom Commands and Keybindings
+
+Create `.vscode/keybindings.json` for custom shortcuts:
+
+```json
+[
+  {
+    "key": "cmd+shift+m",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Swift MCP Server Start"
+  },
+  {
+    "key": "cmd+shift+a",
+    "command": "workbench.action.tasks.runTask", 
+    "args": "Swift MCP Analyze Project"
+  },
+  {
+    "key": "cmd+shift+b",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Swift Build"
+  },
+  {
+    "key": "cmd+shift+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Swift Test"
+  }
+]
+```
+
+#### Step 6: VS Code Snippets for MCP Integration
+
+Create `.vscode/snippets/swift-mcp.json`:
+
+```json
+{
+  "MCP Request": {
+    "prefix": "mcp-request",
+    "body": [
+      "curl -X POST http://127.0.0.1:8080/mcp \\",
+      "  -H \"Content-Type: application/json\" \\",
+      "  -d '{",
+      "    \"method\": \"${1:tools/call}\",",
+      "    \"params\": {",
+      "      \"name\": \"${2:analyze_project}\",", 
+      "      \"arguments\": {",
+      "        \"${3:project_path}\": \"${4:${workspaceFolder}}\"",
+      "      }",
+      "    }",
+      "  }'"
+    ],
+    "description": "Generate MCP API request"
+  },
+  "Swift MCP Tool Call": {
+    "prefix": "mcp-tool",
+    "body": [
+      "// MCP Tool: ${1:analyze_project}",
+      "let request = MCPRequest(",
+      "  method: \"tools/call\",",
+      "  params: MCPParams(",
+      "    name: \"${1:analyze_project}\",",
+      "    arguments: [",
+      "      \"${2:project_path}\": \"${3:path}\"",
+      "    ]",
+      "  )",
+      ")"
+    ],
+    "description": "Swift MCP tool call structure"
+  }
+}
+```
+
+### VS Code Usage Workflow
+
+#### Daily Development Workflow
+
+1. **Start Development Session:**
+   ```bash
+   # Open VS Code in your Swift project
+   code /path/to/your/swift/project
+   
+   # Use Cmd+Shift+M to start MCP Server
+   # Or use Command Palette: "Tasks: Run Task" → "Swift MCP Server Start"
+   ```
+
+2. **Analyze Your Project:**
+   ```bash
+   # Use Cmd+Shift+A to analyze project
+   # Or use Command Palette: "Tasks: Run Task" → "Swift MCP Analyze Project"
+   ```
+
+3. **View Results:**
+   - Analysis results appear in VS Code terminal
+   - Use Output panel to see detailed logs
+   - Check Problems panel for any issues
+
+#### Integration with VS Code Features
+
+**IntelliSense Enhancement:**
+- MCP Server provides enhanced symbol information
+- Real-time architecture analysis during development
+- Protocol-oriented programming insights
+
+**Debugging Integration:**
+- Launch MCP Server in debug mode
+- Set breakpoints in Swift MCP Server code
+- Debug both your app and the MCP server simultaneously
+
+**Task Automation:**
+- Build, test, and analyze with single keystrokes
+- Automated project health checking
+- CI/CD integration with VS Code tasks
+
+### Troubleshooting VS Code Setup
+
+#### Common Issues
+
+**1. SourceKit-LSP Not Found:**
+```bash
+# Check SourceKit-LSP path
+which sourcekit-lsp
+# Should return: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp
+
+# If not found, install Xcode Command Line Tools
+xcode-select --install
+```
+
+**2. Swift Extension Not Working:**
+```json
+// Add to settings.json
+{
+  "swift.path": "/usr/bin/swift",
+  "sourcekit-lsp.trace.server": "verbose"  // For debugging
+}
+```
+
+**3. MCP Server Connection Issues:**
+```bash
+# Test server manually
+curl http://127.0.0.1:8080/health
+
+# Check port availability
+lsof -i :8080
+
+# Use port range for auto-selection
+swift run swift-mcp-server --port-min 8080 --port-max 8090
+```
+
+**4. Permission Issues:**
+```bash
+# Ensure executable permissions
+chmod +x .build/debug/swift-mcp-server
+
+# Check workspace permissions
+ls -la /path/to/your/project
+```
+
 ## Configuration
 
 ### Server Configuration
@@ -265,16 +628,45 @@ Start the MCP server with production settings:
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--host, -h` | Server bind address | `127.0.0.1` |
-| `--port, -p` | Server port | `8081` |  
-| `--log-level` | Logging level (debug, info, warning, error) | `info` |
+| `--port, -p` | Server port | `8080` |  
+| `--port-min` | Minimum port for auto-selection (e.g., --port-min 8080) | None |
+| `--port-max` | Maximum port for auto-selection (e.g., --port-max 8090) | None |
+| `--workspace` | Workspace path for Swift projects | None |
 | `--log-level` | Logging level (trace, debug, info, notice, warning, error, critical) | `info` |
-| `--verbose` | Enable verbose output | `false` |
+| `--verbose` | Enable verbose logging | `false` |
 
 ### Advanced Usage
 
-Start server with workspace analysis:
+**Basic server start:**
+```bash
+swift run swift-mcp-server --host 127.0.0.1 --port 8080
+```
+
+**Start with workspace analysis:**
 ```bash
 swift run swift-mcp-server --host 127.0.0.1 --port 8080 --workspace /path/to/your/swift/project
+```
+
+**Auto port selection with range:**
+```bash
+# Server will automatically find available port in range 8080-8090
+swift run swift-mcp-server --port-min 8080 --port-max 8090 --workspace /path/to/project
+
+# Start from minimum port and scan upward
+swift run swift-mcp-server --port-min 8080 --workspace /path/to/project
+
+# Use maximum port and scan downward
+swift run swift-mcp-server --port-max 8090 --workspace /path/to/project
+```
+
+**Production configuration:**
+```bash
+swift run swift-mcp-server \
+  --host 0.0.0.0 \
+  --port-min 8080 \
+  --port-max 8090 \
+  --workspace /path/to/your/project \
+  --log-level info
 ```
 
 ## Testing & Validation
