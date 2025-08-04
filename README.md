@@ -704,7 +704,7 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) file 
 - 🚀 **Quick Start**: [Getting Started Tutorial](https://github.com/anhptimx/swift-mcp-server/wiki/Getting-Started)
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/anhptimx/swift-mcp-server/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/anhptimx/swift-mcp-server/discussions)
-- 📧 **Email Support**: swift-mcp-support@gmail.com
+- 📧 **Email Support**: phtuanh.imx@gmail.com
 
 ### Community Resources
 
