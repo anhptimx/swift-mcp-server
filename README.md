@@ -1,7 +1,7 @@
 # Swift MCP Server
 
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20|%20Linux-blue.svg)](https://github.com/anhptimx/swift-mcp-server)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20|%20Linux-blue.svg)](https://github.com/your-username/swift-mcp-server)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift%206-Compatible-red.svg)](https://swift.org)
 
@@ -22,32 +22,48 @@ Swift MCP Server provides comprehensive Swift project analysis through the Model
 
 ## Quick Start
 
-### Installation
+### Automated Setup
+```bash
+# Clone repository
+git clone https://github.com/your-username/swift-mcp-server.git
+cd swift-mcp-server
+
+# Interactive setup (builds, configures, and tests)
+./quick-start.sh
+
+# Or fix common issues automatically
+./quick-fix.sh all
+```
+
+### Manual Installation
 
 ```bash
-# Clone and build
-git clone https://github.com/anhptimx/swift-mcp-server.git
-cd swift-mcp-server
+# Build release binary
 swift build --configuration release
+
+# Test health check
+./health-check.sh
 ```
 
 ### Usage
 
-#### VS Code/Serena Integration (STDIO)
+#### VS Code Integration (STDIO)
 ```bash
-# Direct integration with VS Code MCP extensions
+# Use pre-configured VS Code settings
+cp vscode-mcp-config.json ~/.vscode/mcp-template.json
 swift-mcp-server --transport stdio --workspace /path/to/project
+```
+
+#### Serena Integration (STDIO)
+```bash
+# Direct Serena integration
+swift-mcp-server --config stdio-config.json --transport stdio
 ```
 
 #### HTTP API Server
 ```bash
-# HTTP server with intelligent port selection
-swift-mcp-server --transport http --port-min 8080 --port-max 8090
-```
-
-#### Enterprise Deployment
-```bash
-# JSON configuration with advanced features
+# Enterprise HTTP server
+swift-mcp-server --config http-config.json --transport http --port 9000
 swift-mcp-server --config enterprise-config.json --json-logs
 ```
 
@@ -69,6 +85,26 @@ Add to your VS Code MCP configuration:
     }
   }
 }
+```
+
+## Project Structure
+
+### Core Files
+```
+swift-mcp-server/
+├── README.md                    # Main documentation
+├── CONFIG_GUIDE.md             # Configuration guide
+├── Package.swift               # Swift package definition
+├── Sources/                    # Source code
+│   ├── SwiftMCPServer/        # Main application
+│   └── SwiftMCPCore/          # Core MCP implementation
+├── vscode-mcp-config.json     # VS Code MCP configuration
+├── stdio-config.json          # STDIO transport config  
+├── http-config.json           # HTTP transport config
+├── quick-start.sh             # Interactive setup script
+├── quick-fix.sh               # Problem resolution script
+├── health-check.sh            # System verification script
+└── test-integration.sh        # Integration test suite
 ```
 
 ### Available Tools

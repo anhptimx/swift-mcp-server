@@ -386,8 +386,8 @@ let package = Package(
 ### Getting Help
 
 - 📖 [Serena Documentation](https://github.com/oraios/serena)
-- 🚀 [Swift MCP Server Repository](https://github.com/anhptimx/swift-mcp-server)
-- 🐛 [Report Issues](https://github.com/anhptimx/swift-mcp-server/issues)
+- 🚀 [Swift MCP Server Repository](https://github.com/your-username/swift-mcp-server)
+- 🐛 [Report Issues](https://github.com/your-username/swift-mcp-server/issues)
 - 💬 [Discussions](https://github.com/oraios/serena/discussions)
 - 📧 Community Support: serena-mcp@oraios-ai.de
 

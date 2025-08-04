@@ -6,7 +6,7 @@
   "mcp": {
     "servers": {
       "swift-mcp-server": {
-        "command": "/absolute/path/to/swift-mcp-server/.build/release/swift-mcp-server",
+        "command": "/path/to/swift-mcp-server/.build/release/swift-mcp-server",
         "args": [
           "--transport", "stdio",
           "--workspace", "${workspaceFolder}",

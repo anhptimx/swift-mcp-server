@@ -216,7 +216,7 @@ Include:
 
 ## Getting Help
 
-- **Discussions**: Use [GitHub Discussions](https://github.com/anhptimx/swift-mcp-server/discussions) for questions
+- **Discussions**: Use [GitHub Discussions](https://github.com/your-username/swift-mcp-server/discussions) for questions
 - **Issues**: Create issues for bugs/features
 - **Documentation**: Check existing documentation first
 

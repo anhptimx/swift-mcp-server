@@ -192,14 +192,20 @@ test_server() {
     
     # Test STDIO mode
     print_info "Testing STDIO mode..."
-    timeout 5s "$SERVER_BINARY" --transport stdio --workspace "$SCRIPT_DIR" --test-mode || {
-        if [ $? -eq 124 ]; then
-            print_success "STDIO mode started successfully (timeout expected)"
+    
+    # Test with a simple MCP request (works on all platforms)
+    local test_request='{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}}}'
+    
+    if echo "$test_request" | "$SERVER_BINARY" --transport stdio --workspace "$SCRIPT_DIR" > /tmp/stdio-test.json 2>&1; then
+        if grep -q '"result"' /tmp/stdio-test.json; then
+            print_success "STDIO mode working correctly"
         else
-            print_error "STDIO mode failed to start"
-            return 1
+            print_warning "STDIO mode response unexpected"
         fi
-    }
+    else
+        print_error "STDIO mode failed to start"
+        return 1
+    fi
     
     print_success "All tests passed"
 }

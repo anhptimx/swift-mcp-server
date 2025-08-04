@@ -72,9 +72,9 @@ if [ -f ".build/release/swift-mcp-server" ]; then
     
     # Test HTTP mode
     echo -n "  HTTP transport... "
-    timeout 3s .build/release/swift-mcp-server --transport http --port 8099 > /dev/null 2>&1 &
+    .build/release/swift-mcp-server --transport http --port 8099 > /dev/null 2>&1 &
     SERVER_PID=$!
-    sleep 1
+    sleep 2
     
     if kill -0 $SERVER_PID 2>/dev/null; then
         echo -e "${GREEN}✅ OK${NC}"
@@ -86,9 +86,9 @@ if [ -f ".build/release/swift-mcp-server" ]; then
     # Test STDIO mode
     echo -n "  STDIO transport... "
     echo '{"jsonrpc": "2.0", "method": "initialize", "id": 1, "params": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}}}' | \
-        timeout 3s .build/release/swift-mcp-server --transport stdio > /dev/null 2>&1
+        .build/release/swift-mcp-server --transport stdio > /tmp/health-stdio.json 2>&1
     
-    if [ $? -eq 0 ]; then
+    if [ $? -eq 0 ] && grep -q '"result"' /tmp/health-stdio.json 2>/dev/null; then
         echo -e "${GREEN}✅ OK${NC}"
     else
         echo -e "${RED}❌ Failed${NC}"
